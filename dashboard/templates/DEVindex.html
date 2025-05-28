@@ -73,27 +73,6 @@
                 <h1>Welcome back, {{ username }}! 👋</h1>
                 <p>Here's your bot's current status and statistics</p>
             </section>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Servers</h3>
-                    <p>{{ stats.server_count }}</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Users</h3>
-                    <p>{{ stats.user_count }}</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Uptime</h3>
-                    <p id="uptime" data-uptime="{{ stats.uptime }}">Calculating...</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Latency</h3>
-                    <p>{{ stats.latency }}ms</p>
-                </div>
-            </div>
-
-                <!-- Add new shard status section -->
                 <div class="shard-status">
                     <h2>🔋 Shard Status</h2>
                     <div class="stats-grid">
