@@ -4,9 +4,13 @@ import json
 from functools import wraps
 import time
 import os
+import hmac
+import hashlib
+import datetime
 from pymongo import MongoClient
 import pymongo.errors
 from dotenv import load_dotenv
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -438,6 +442,52 @@ def servers():
         username=request.cookies.get('username', 'User'),
         config={'CLIENT_ID': DISCORD_CLIENT_ID}
     )
+
+@app.route('/webhooks/topgg', methods=['POST'])
+def topgg_webhook():
+    """Handle Top.gg vote webhook"""
+    # Verify the signature
+    TOPGG_WEBHOOK_SECRET = os.environ.get('TOPGG_WEBHOOK_SECRET')
+    if not TOPGG_WEBHOOK_SECRET:
+        return jsonify({"error": "Webhook secret not configured"}), 500
+        
+    signature = request.headers.get('Authorization')
+    if not signature:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    # Verify HMAC signature
+    body = request.get_data()
+    expected_signature = hmac.new(
+        TOPGG_WEBHOOK_SECRET.encode(),
+        body,
+        hashlib.sha256
+    ).hexdigest()
+    
+    if not hmac.compare_digest(signature, expected_signature):
+        return jsonify({"error": "Invalid signature"}), 401
+    
+    data = request.json
+    user_id = data['user']
+    
+    try:
+        # Process the vote reward (1000 coins)
+        reward_amount = 1000
+        db.users.update_one(
+            {"_id": str(user_id)},
+            {
+                "$inc": {"wallet": reward_amount},
+                "$set": {"last_vote": datetime.datetime.utcnow()}
+            },
+            upsert=True
+        )
+        
+        # Log the vote
+        print(f"Processed vote reward for user {user_id}")
+        return jsonify({"success": True}), 200
+        
+    except Exception as e:
+        print(f"Error processing vote: {e}")
+        return jsonify({"error": "Failed to process vote"}), 500
 
 @app.route('/servers/<guild_id>/settings')
 @login_required
