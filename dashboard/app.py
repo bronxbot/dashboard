@@ -38,24 +38,7 @@ except Exception as e:
     print(f"Unexpected MongoDB error: {e}")
     MONGODB_AVAILABLE = False
     db = None
-# Initialize MongoDB with better error handling
-MONGODB_URI = os.environ.get("MONGO_URI")
-try:
-    mongo_client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000)  # 5 second timeout
-    # Test the connection
-    mongo_client.admin.command('ping')
-    db = mongo_client.bronxbot
-    MONGODB_AVAILABLE = True
-    print("MongoDB connection successful")
-except pymongo.errors.ServerSelectionTimeoutError as e:
-    print(f"MongoDB connection failed: {e}")
-    print("Running without database functionality")
-    MONGODB_AVAILABLE = False
-    db = None
-except Exception as e:
-    print(f"Unexpected MongoDB error: {e}")
-    MONGODB_AVAILABLE = False
-    db = None
+
 
 def get_guild_settings(guild_id: str):
     """Get guild settings synchronously with error handling"""
@@ -380,6 +363,54 @@ def callback():
         resp.set_cookie('access_token', access_token)
         return resp
     return 'Authentication failed', 400
+
+@app.route('/api/lastfm/callback')
+def lastfm_callback():
+    token = request.args.get('token')
+    discord_id = request.args.get('discord_id')
+
+    if not token or not discord_id:
+        return jsonify({'error': 'Missing token or Discord ID'}), 400
+
+    api_key = os.getenv("LASTFM_API_KEY")
+    api_secret = os.getenv("LASTFM_API_SECRET")
+    if not api_key or not api_secret:
+        return jsonify({'error': 'Missing Last.fm credentials'}), 500
+
+    # Generate API signature
+    params = {
+        'method': 'auth.getSession',
+        'api_key': api_key,
+        'token': token
+    }
+    sig_base = ''.join(f"{k}{v}" for k, v in sorted(params.items())) + api_secret
+    api_sig = hashlib.md5(sig_base.encode()).hexdigest()
+
+    params['api_sig'] = api_sig
+    params['format'] = 'json'
+    try:
+        response = requests.get("https://ws.audioscrobbler.com/2.0/", params=params)
+        data = response.json()
+        if 'error' in data:
+            return jsonify({'error': data.get('message', 'Unknown Last.fm error')}), 400
+
+        session_key = data['session']['key']
+        username = data['session']['name']
+
+        # Save to MongoDB
+        if MONGODB_AVAILABLE and db:
+            db.users.update_one(
+                {"_id": str(discord_id)},
+                {"$set": {"lastfm":{"username": username, "session": session_key}}},
+                upsert=True
+            )
+        else:
+            return jsonify({'error': 'MongoDB not available'}), 500
+
+        return render_template("success.html", username=username)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/logout')
 def logout():
