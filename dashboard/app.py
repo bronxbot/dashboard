@@ -389,9 +389,16 @@ def lastfm_callback():
     params['api_sig'] = api_sig
     params['format'] = 'json'
     try:
-        response = requests.get("https://ws.audioscrobbler.com/2.0/", params=params)
-        data = response.json()
+        response = requests.get("https://ws.audioscrobbler.com/2.0/", params=params, timeout=10)
+        response.raise_for_status()
+        try:
+            data = response.json()
+        except Exception as e:
+            app.logger.error(f"Last.fm JSON decode error: {e}")
+            return jsonify({'error': 'Failed to decode Last.fm response'}), 500
+
         if 'error' in data:
+            app.logger.warning(f"Last.fm error: {data.get('message', 'Unknown error')}")
             return jsonify({'error': data.get('message', 'Unknown Last.fm error')}), 400
 
         session_key = data['session']['key']
@@ -401,14 +408,18 @@ def lastfm_callback():
         if MONGODB_AVAILABLE and db is not None:
             db.users.update_one(
                 {"_id": str(discord_id)},
-                {"$set": {"lastfm":{"username": username, "session": session_key}}},
+                {"$set": {"lastfm": {"username": username, "session": session_key}}},
                 upsert=True
             )
         else:
             return jsonify({'error': 'MongoDB not available'}), 500
 
         return render_template("success.html", username=username)
+    except requests.RequestException as e:
+        app.logger.error(f"Last.fm API error: {e}")
+        return jsonify({'error': 'Failed to contact Last.fm', 'details': str(e)}), 500
     except Exception as e:
+        app.logger.error(f"Unexpected error in /api/lastfm/callback: {e}")
         return jsonify({'error': str(e)}), 500
 
 
