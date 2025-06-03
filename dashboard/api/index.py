@@ -9,4 +9,9 @@ from app import app as flask_app
 
 def handler(request: Request):
     """Handle requests in Vercel serverless function"""
-    return flask_app.wsgi_app(request.environ, lambda x, y: y)
+    def start_response(status, headers, exc_info=None):
+        def write(body):
+            pass  # No-op for serverless
+        return write
+
+    return flask_app.wsgi_app(request.environ, start_response)

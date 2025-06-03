@@ -398,7 +398,7 @@ def lastfm_callback():
         username = data['session']['name']
 
         # Save to MongoDB
-        if MONGODB_AVAILABLE and db:
+        if MONGODB_AVAILABLE and db is not None:
             db.users.update_one(
                 {"_id": str(discord_id)},
                 {"$set": {"lastfm":{"username": username, "session": session_key}}},
