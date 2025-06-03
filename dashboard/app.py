@@ -451,7 +451,11 @@ def lastfm_callback():
             os.makedirs(fallback_dir, exist_ok=True)
             if os.path.exists(fallback_path):
                 with open(fallback_path, "r", encoding="utf-8") as f:
-                    fallback_data = json.load(f)
+                    try:
+                        fallback_data = json.load(f)
+                    except Exception:
+                        # File is empty or invalid, start fresh
+                        fallback_data = {}
             else:
                 fallback_data = {}
             fallback_data[str(discord_id)] = {
@@ -860,6 +864,48 @@ def live_stats():
 @app.route("/invite")
 def invite():
     return redirect("https://discord.com/oauth2/authorize?client_id=828380019406929962&permissions=8&response_type=code&redirect_uri=https%3A%2F%2Fbronxbot.onrender.com%2Fcallback&integration_type=0&scope=bot+identify+guilds+applications.commands")
+
+@app.route('/api/lastfm/unlink', methods=['POST'])
+@login_required
+def lastfm_unlink():
+    """Unlink Last.fm account for the logged-in user."""
+    user_id = request.cookies.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not logged in'}), 401
+
+    if MONGODB_AVAILABLE and db is not None:
+        try:
+            result = db.users.update_one(
+                {"_id": str(user_id)},
+                {"$unset": {"lastfm": ""}}
+            )
+            if result.modified_count > 0:
+                return jsonify({'success': True, 'message': 'Last.fm account unlinked.'})
+            else:
+                return jsonify({'success': False, 'message': 'No Last.fm account linked.'})
+        except Exception as e:
+            app.logger.error(f"MongoDB error unlinking Last.fm: {e}")
+            return jsonify({'error': 'Failed to unlink Last.fm from database'}), 500
+    else:
+        # Fallback: Remove from JSON file
+        fallback_dir = "data"
+        fallback_path = os.path.join(fallback_dir, "lastfm_fallback.json")
+        try:
+            if os.path.exists(fallback_path):
+                with open(fallback_path, "r", encoding="utf-8") as f:
+                    fallback_data = json.load(f)
+                if str(user_id) in fallback_data:
+                    del fallback_data[str(user_id)]
+                    with open(fallback_path, "w", encoding="utf-8") as f:
+                        json.dump(fallback_data, f, indent=2)
+                    return jsonify({'success': True, 'message': 'Last.fm account unlinked.'})
+                else:
+                    return jsonify({'success': False, 'message': 'No Last.fm account linked.'})
+            else:
+                return jsonify({'success': False, 'message': 'No Last.fm account linked.'})
+        except Exception as e:
+            app.logger.error(f"Error unlinking Last.fm from fallback JSON: {e}")
+            return jsonify({'error': 'Failed to unlink Last.fm from file'}), 500
 
 if __name__ == "__main__":
     try:
