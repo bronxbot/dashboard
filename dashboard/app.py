@@ -364,6 +364,23 @@ def callback():
         return resp
     return 'Authentication failed', 400
 
+def get_lastfm_credentials():
+    """Get Last.fm API credentials from env or config.json"""
+    api_key = os.getenv("LASTFM_API_KEY")
+    api_secret = os.getenv("LASTFM_API_SECRET")
+    if api_key and api_secret:
+        return api_key, api_secret
+    # Fallback to config.json
+    try:
+        with open("data/config.json", "r") as f:
+            config = json.load(f)
+        api_key = api_key or config.get("LASTFM_API_KEY")
+        api_secret = api_secret or config.get("LASTFM_API_SECRET")
+        return api_key, api_secret
+    except Exception as e:
+        print(f"Could not load Last.fm credentials from config.json: {e}")
+        return None, None
+
 @app.route('/api/lastfm/callback')
 def lastfm_callback():
     token = request.args.get('token')
@@ -372,8 +389,7 @@ def lastfm_callback():
     if not token or not discord_id:
         return jsonify({'error': 'Missing token or Discord ID'}), 400
 
-    api_key = os.getenv("LASTFM_API_KEY")
-    api_secret = os.getenv("LASTFM_API_SECRET")
+    api_key, api_secret = get_lastfm_credentials()
     if not api_key or not api_secret:
         return jsonify({'error': 'Missing Last.fm credentials'}), 500
 
@@ -384,44 +400,71 @@ def lastfm_callback():
         'token': token
     }
     sig_base = ''.join(f"{k}{v}" for k, v in sorted(params.items())) + api_secret
+    print("Signature base string:", sig_base)
     api_sig = hashlib.md5(sig_base.encode()).hexdigest()
+    print("API signature:", api_sig)
 
     params['api_sig'] = api_sig
     params['format'] = 'json'
     try:
         response = requests.get("https://ws.audioscrobbler.com/2.0/", params=params, timeout=10)
         response.raise_for_status()
+    except requests.RequestException as e:
+        app.logger.error(f"Last.fm API error: {e}")
+        return jsonify({'error': 'Failed to contact Last.fm', 'details': str(e)}), 500
+
+    try:
+        data = response.json()
+    except Exception as e:
+        app.logger.error(f"Last.fm JSON decode error: {e}")
+        return jsonify({'error': 'Failed to decode Last.fm response'}), 500
+
+    if 'error' in data:
+        app.logger.warning(f"Last.fm error: {data.get('message', 'Unknown error')}")
+        return jsonify({'error': data.get('message', 'Unknown Last.fm error')}), 400
+
+    session = data.get('session')
+    if not session or 'key' not in session or 'name' not in session:
+        app.logger.error(f"Last.fm session missing in response: {data}")
+        return jsonify({'error': 'Invalid session data from Last.fm'}), 500
+
+    session_key = session['key']
+    username = session['name']
+
+    # Save to MongoDB or fallback to JSON file
+    if MONGODB_AVAILABLE and db is not None:
         try:
-            data = response.json()
-        except Exception as e:
-            app.logger.error(f"Last.fm JSON decode error: {e}")
-            return jsonify({'error': 'Failed to decode Last.fm response'}), 500
-
-        if 'error' in data:
-            app.logger.warning(f"Last.fm error: {data.get('message', 'Unknown error')}")
-            return jsonify({'error': data.get('message', 'Unknown Last.fm error')}), 400
-
-        session_key = data['session']['key']
-        username = data['session']['name']
-
-        # Save to MongoDB
-        if MONGODB_AVAILABLE and db is not None:
             db.users.update_one(
                 {"_id": str(discord_id)},
                 {"$set": {"lastfm": {"username": username, "session": session_key}}},
                 upsert=True
             )
-        else:
-            return jsonify({'error': 'MongoDB not available'}), 500
+        except Exception as e:
+            app.logger.error(f"MongoDB error saving Last.fm session: {e}")
+            return jsonify({'error': 'Failed to save Last.fm session to database'}), 500
+    else:
+        # Fallback: Save to JSON file
+        fallback_dir = "data"
+        fallback_path = os.path.join(fallback_dir, "lastfm_fallback.json")
+        try:
+            # Ensure the directory exists
+            os.makedirs(fallback_dir, exist_ok=True)
+            if os.path.exists(fallback_path):
+                with open(fallback_path, "r", encoding="utf-8") as f:
+                    fallback_data = json.load(f)
+            else:
+                fallback_data = {}
+            fallback_data[str(discord_id)] = {
+                "username": username,
+                "session": session_key
+            }
+            with open(fallback_path, "w", encoding="utf-8") as f:
+                json.dump(fallback_data, f, indent=2)
+        except Exception as e:
+            app.logger.error(f"Error saving Last.fm session to fallback JSON: {e}")
+            return jsonify({'error': 'Failed to save Last.fm session to file'}), 500
 
-        return render_template("success.html", username=username)
-    except requests.RequestException as e:
-        app.logger.error(f"Last.fm API error: {e}")
-        return jsonify({'error': 'Failed to contact Last.fm', 'details': str(e)}), 500
-    except Exception as e:
-        app.logger.error(f"Unexpected error in /api/lastfm/callback: {e}")
-        return jsonify({'error': str(e)}), 500
-
+    return render_template("success.html", username=username)
 
 @app.route('/logout')
 def logout():

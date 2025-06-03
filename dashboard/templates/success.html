@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Last.fm Linked Successfully!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: rgba(30, 30, 40, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            padding: 2.5rem 2rem;
+            max-width: 400px;
+            text-align: center;
+            margin: 2rem;
+        }
+        h1 {
+            color: #ff5e62;
+            margin-bottom: 1rem;
+        }
+        .username {
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .success-icon {
+            font-size: 3rem;
+            color: #43e97b;
+            margin-bottom: 1rem;
+        }
+        .btn {
+            display: inline-block;
+            margin-top: 2rem;
+            padding: 0.75rem 2rem;
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+            color: #232526;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+        }
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.95rem;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✔️</div>
+        <h1>Last.fm Linked!</h1>
+        <p>Welcome, <span class="username">{{ username }}</span>.<br>
+        Your Last.fm account has been successfully linked.</p>
+        <a href="/" class="btn">Go to Dashboard</a>
+        <div class="footer">
+            Need help? <a href="https://discord.gg/furryporn" style="color:#38f9d7;text-decoration:underline;">Join our Discord</a>
+        </div>
+    </div>
+</body>
+</html>
