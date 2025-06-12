@@ -1,4 +1,5 @@
 from flask import Flask, render_template, redirect, request, make_response, url_for, jsonify, Response
+from flask.templating import TemplateNotFound
 import requests
 import json
 from functools import wraps
@@ -6,10 +7,10 @@ import time
 import os
 import hmac
 import hashlib
-import datetime
 from pymongo import MongoClient
 import pymongo.errors
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 
 # Load environment variables from .env file
@@ -40,125 +41,41 @@ except Exception as e:
     db = None
 
 
-def get_guild_settings(guild_id: str):
-    """Get guild settings synchronously with error handling"""
-    if not MONGODB_AVAILABLE or db is None:
-        print("MongoDB not available, returning default settings")
-        return {
-            'prefixes': ['!'],
-            'welcome': {
-                'enabled': False,
-                'channel_id': None,
-                'message': 'Welcome to the server!'
-            },
-            'moderation': {
-                'log_channel': None,
-                'mute_role': None,
-                'jail_role': None
-            }
-        }
-    
+# Create data directory if it doesn't exist
+data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir)
+
+# Stats file path
+stats_file = os.path.join(data_dir, 'stats.json')
+
+def load_stats():
+    """Load stats from JSON file"""
     try:
-        settings = db.guild_settings.find_one({"_id": str(guild_id)})
-        return settings if settings else {}
+        with open(stats_file, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Return default stats if file doesn't exist
+        return {
+            "uptime": {"days": 0, "hours": 0, "minutes": 0},
+            "guilds": {"count": 0, "history": []},
+            "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}},
+            "last_updated": datetime.now().isoformat()
+        }
     except Exception as e:
-        print(f"Error getting guild settings: {e}")
+        print(f"Error loading stats: {e}")
         return {}
 
-def get_user_balance(user_id: str):
-    """Get user balance from database"""
-    if not MONGODB_AVAILABLE or not db:
-        return {'balance': 0, 'bank': 0}
-    
+def save_stats(stats):
+    """Save stats to JSON file"""
     try:
-        user_data = db.users.find_one({"_id": str(user_id)})
-        if user_data:
-            return {
-                'balance': user_data.get('balance', 0),
-                'bank': user_data.get('bank', 0)
-            }
-        return {'balance': 0, 'bank': 0}
+        stats['last_updated'] = datetime.now().isoformat()
+        with open(stats_file, 'w') as f:
+            json.dump(stats, f, indent=2)
+        return True
     except Exception as e:
-        print(f"Error getting user balance: {e}")
-        return {'balance': 0, 'bank': 0}
-
-def get_guild_stats(guild_id: str):
-    """Get guild statistics from database"""
-    if not MONGODB_AVAILABLE or not db:
-        return {'member_count': 0, 'message_count': 0, 'active_users': 0}
-    
-    try:
-        stats = db.guild_stats.find_one({"_id": str(guild_id)})
-        if stats:
-            return {
-                'member_count': stats.get('member_count', 0),
-                'message_count': stats.get('message_count', 0),
-                'active_users': stats.get('active_users', 0)
-            }
-        return {'member_count': 0, 'message_count': 0, 'active_users': 0}
-    except Exception as e:
-        print(f"Error getting guild stats: {e}")
-        return {'member_count': 0, 'message_count': 0, 'active_users': 0}
-
-def get_guild_settings(guild_id: str):
-    """Get guild settings synchronously with error handling"""
-    if not MONGODB_AVAILABLE or db is None:
-        print("MongoDB not available, returning default settings")
-        return {
-            'prefixes': ['!'],
-            'welcome': {
-                'enabled': False,
-                'channel_id': None,
-                'message': 'Welcome to the server!'
-            },
-            'moderation': {
-                'log_channel': None,
-                'mute_role': None,
-                'jail_role': None
-            }
-        }
-    
-    try:
-        settings = db.guild_settings.find_one({"_id": str(guild_id)})
-        return settings if settings else {}
-    except Exception as e:
-        print(f"Error getting guild settings: {e}")
-        return {}
-
-def get_user_balance(user_id: str):
-    """Get user balance from database"""
-    if not MONGODB_AVAILABLE or not db:
-        return {'balance': 0, 'bank': 0}
-    
-    try:
-        user_data = db.users.find_one({"_id": str(user_id)})
-        if user_data:
-            return {
-                'balance': user_data.get('balance', 0),
-                'bank': user_data.get('bank', 0)
-            }
-        return {'balance': 0, 'bank': 0}
-    except Exception as e:
-        print(f"Error getting user balance: {e}")
-        return {'balance': 0, 'bank': 0}
-
-def get_guild_stats(guild_id: str):
-    """Get guild statistics from database"""
-    if not MONGODB_AVAILABLE or not db:
-        return {'member_count': 0, 'message_count': 0, 'active_users': 0}
-    
-    try:
-        stats = db.guild_stats.find_one({"_id": str(guild_id)})
-        if stats:
-            return {
-                'member_count': stats.get('member_count', 0),
-                'message_count': stats.get('message_count', 0),
-                'active_users': stats.get('active_users', 0)
-            }
-        return {'member_count': 0, 'message_count': 0, 'active_users': 0}
-    except Exception as e:
-        print(f"Error getting guild stats: {e}")
-        return {'member_count': 0, 'message_count': 0, 'active_users': 0}
+        print(f"Error saving stats: {e}")
+        return False
 
 def get_guild_settings(guild_id: str):
     """Get guild settings synchronously with error handling"""
@@ -305,23 +222,130 @@ def login_required(f):
 
 @app.route('/api/stats', methods=['GET', 'POST'])
 def api_stats():
+    """Handle bot stats - GET to retrieve, POST to update from bot"""
     global bot_stats
+    
     if request.method == 'POST':
-        bot_stats.update(request.json)
-        return jsonify({"status": "success"})
-    return jsonify(bot_stats)
+        try:
+            data = request.get_json()
+            if not data:
+                return jsonify({"error": "No data provided"}), 400
+            
+            # print(f"Received stats update: {data}")  # Debug print
+            
+            # Update the global bot_stats with new format
+            if 'uptime' in data:
+                bot_stats['uptime'] = data['uptime'].get('total_seconds', 0)
+                bot_stats['uptime_details'] = data['uptime']
+            
+            if 'guilds' in data:
+                bot_stats['server_count'] = data['guilds'].get('count', 0)
+                bot_stats['guilds'] = data['guilds'].get('list', [])
+            
+            if 'performance' in data:
+                bot_stats['user_count'] = data['performance'].get('user_count', 0)
+                bot_stats['latency'] = data['performance'].get('latency', 0)
+                bot_stats['shard_count'] = data['performance'].get('shard_count', 1)
+            
+            # Handle command metrics and store in data/stats.json
+            if 'commands' in data:
+                stats_file = os.path.join('data', 'stats.json')
+                
+                # Load existing stats
+                try:
+                    with open(stats_file, 'r') as f:
+                        existing_stats = json.load(f)
+                except (FileNotFoundError, json.JSONDecodeError):
+                    existing_stats = {
+                        "uptime": {},
+                        "guilds": {"count": 0, "history": []},
+                        "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}},
+                        "last_updated": datetime.now().isoformat()
+                    }
+                
+                # Update with new data
+                if 'uptime' in data:
+                    existing_stats['uptime'] = {
+                        "days": data['uptime'].get('days', 0),
+                        "hours": data['uptime'].get('hours', 0),
+                        "minutes": data['uptime'].get('minutes', 0),
+                        "start_time": data['uptime'].get('start_time', time.time())
+                    }
+                
+                if 'guilds' in data:
+                    existing_stats['guilds']['count'] = data['guilds'].get('count', 0)
+                    # Add to history if it's a new day or significant change
+                    today = datetime.now().strftime('%Y-%m-%d')
+                    if not existing_stats['guilds']['history'] or \
+                       existing_stats['guilds']['history'][-1]['date'] != today:
+                        existing_stats['guilds']['history'].append({
+                            'count': data['guilds'].get('count', 0),
+                            'date': today,
+                            'timestamp': datetime.now().isoformat()
+                        })
+                        # Keep only last 30 days
+                        if len(existing_stats['guilds']['history']) > 30:
+                            existing_stats['guilds']['history'] = existing_stats['guilds']['history'][-30:]
+                
+                if 'commands' in data:
+                    if 'total_executed' in data['commands']:
+                        existing_stats['commands']['total_executed'] = data['commands']['total_executed']
+                    
+                    if 'daily_count' in data['commands'] and data['commands']['daily_count'] > 0:
+                        today = datetime.now().strftime('%Y-%m-%d')
+                        # Update today's count or add new entry
+                        daily_metrics = existing_stats['commands']['daily_metrics']
+                        updated = False
+                        for metric in daily_metrics:
+                            if metric['date'] == today:
+                                metric['count'] = data['commands']['daily_count']
+                                metric['timestamp'] = datetime.now().isoformat()
+                                updated = True
+                                break
+                        
+                        if not updated:
+                            daily_metrics.append({
+                                'date': today,
+                                'count': data['commands']['daily_count'],
+                                'timestamp': datetime.now().isoformat()
+                            })
+                            # Keep only last 30 days
+                            if len(daily_metrics) > 30:
+                                existing_stats['commands']['daily_metrics'] = daily_metrics[-30:]
+                    
+                    if 'command_types' in data['commands']:
+                        existing_stats['commands']['command_types'] = data['commands']['command_types']
+                
+                existing_stats['last_updated'] = datetime.now().isoformat()
+                
+                # Save updated stats
+                os.makedirs('data', exist_ok=True)
+                with open(stats_file, 'w') as f:
+                    json.dump(existing_stats, f, indent=2)
+            
+            return jsonify({"status": "success", "message": "Stats updated successfully"})
+            
+        except Exception as e:
+            print(f"Error updating stats: {e}")
+            return jsonify({"error": str(e)}), 500
+    
+    # GET request - return current stats
+    return jsonify(load_stats())
 
 @app.route('/')
 def home():
     user_id = request.cookies.get('user_id')
+    # Load real stats from file
+    stats = load_stats()
+    
     # Only check bot owner ID if Discord config is loaded
     if DISCORD_BOT_OWNER_ID and user_id and user_id == DISCORD_BOT_OWNER_ID and request.host == 'localhost:5000':
         username = request.cookies.get('username', 'User')
-        return render_template('DEVindex.html', username=username, stats=bot_stats) 
+        return render_template('DEVindex.html', username=username, stats=stats) 
     elif user_id:
         username = request.cookies.get('username', 'User')
-        return render_template('index.html', username=username, stats=bot_stats)
-    return render_template('home.html', stats=bot_stats)
+        return render_template('index.html', username=username, stats=stats)
+    return render_template('home.html', stats=stats)
 
 @app.route('/login')
 def login():
@@ -360,6 +384,7 @@ def callback():
         resp = make_response(redirect('/'))
         resp.set_cookie('user_id', user['id'])
         resp.set_cookie('username', user['username'])
+        resp.set_cookie('avatar_hash', user.get('avatar', ''))
         resp.set_cookie('access_token', access_token)
         return resp
     return 'Authentication failed', 400
@@ -492,16 +517,91 @@ def get_bot_guilds():
     global bot_stats
     return bot_stats.get('guilds', [])
 
+def get_bot_guild_details():
+    """Fetch detailed bot guild data from stats file"""
+    try:
+        stats = load_stats()
+        return stats.get('guilds', {}).get('detailed', [])
+    except Exception as e:
+        print(f"Error loading guild details: {e}")
+        return []
+
 @app.route('/health')
 def health():
-    """Health check endpoint"""
+    """Health check endpoint for testing and monitoring"""
+    try:
+        # Basic health checks
+        health_status = {
+            'status': 'healthy',
+            'timestamp': datetime.now().isoformat(),
+            'version': '1.0.0',
+            'environment': os.environ.get('FLASK_ENV', 'production')
+        }
+        
+        # Check MongoDB connection
+        if MONGODB_AVAILABLE and db is not None:
+            try:
+                db.admin.command('ping')
+                health_status['database'] = 'connected'
+            except Exception as e:
+                health_status['database'] = 'disconnected'
+                health_status['database_error'] = str(e)
+        else:
+            health_status['database'] = 'unavailable'
+        
+        # Check Discord configuration
+        config_loaded = load_config()
+        health_status['discord_config'] = 'configured' if config_loaded else 'missing'
+        
+        # Check required environment variables
+        required_vars = ['SECRET_KEY', 'MONGO_URI']
+        missing_vars = [var for var in required_vars if not os.environ.get(var)]
+        health_status['environment_vars'] = 'complete' if not missing_vars else 'incomplete'
+        if missing_vars:
+            health_status['missing_vars'] = missing_vars
+        
+        # Overall status
+        if (health_status['database'] in ['connected', 'unavailable'] and 
+            health_status['discord_config'] == 'configured' and
+            health_status['environment_vars'] == 'complete'):
+            health_status['status'] = 'healthy'
+            return jsonify(health_status), 200
+        else:
+            health_status['status'] = 'degraded'
+            return jsonify(health_status), 200
+            
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/test')
+def api_test():
+    """Test API endpoint for automated testing"""
     return jsonify({
-        'status': 'ok',
+        'message': 'API is working',
+        'timestamp': datetime.now().isoformat(),
         'mongodb_available': MONGODB_AVAILABLE,
-        'discord_configured': load_config()
+        'discord_configured': bool(DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET)
     })
 
+@app.route('/faq')
+@app.route('/FAQ')
+def faq():
+    """FAQ page"""
+    try:
+        return render_template('faq.html')
+    except TemplateNotFound as e:
+        print(f"Template not found: {e}")
+        return f"Template not found: {e}", 404
+    except Exception as e:
+        print(f"Error rendering FAQ template: {e}")
+        return f"Error rendering FAQ template: {e}", 500
+
 @app.route('/servers')
+@app.route('/SERVERS')
 @login_required
 def servers():
     """Show list of servers the user has access to"""
@@ -511,6 +611,10 @@ def servers():
         
     user_guilds = get_user_guilds(access_token)
     bot_guilds = get_bot_guilds()
+    bot_guild_details = get_bot_guild_details()
+    
+    # Create a lookup dictionary for bot guild details
+    bot_guild_lookup = {detail['id']: detail for detail in bot_guild_details}
     
     # Filter guilds where user has manage server permission
     manage_guilds = [
@@ -518,10 +622,17 @@ def servers():
         if (int(guild['permissions']) & 0x20) == 0x20  # Check for MANAGE_GUILD permission
     ]
     
-    # Mark guilds where bot is present and add icon URLs
+    # Mark guilds where bot is present and add icon URLs and member counts
     for guild in manage_guilds:
-        guild['bot_present'] = str(guild['id']) in bot_guilds
+        guild_id = str(guild['id'])
+        guild['bot_present'] = guild_id in bot_guilds
         guild['icon_url'] = f"https://cdn.discordapp.com/icons/{guild['id']}/{guild['icon']}.png" if guild['icon'] else None
+        
+        # Add member count from bot data if available
+        if guild_id in bot_guild_lookup:
+            guild['member_count'] = bot_guild_lookup[guild_id].get('member_count', 0)
+        else:
+            guild['member_count'] = 0
     
     # Sort guilds to show bot-present servers first
     manage_guilds.sort(key=lambda g: (not g['bot_present'], g['name'].lower()))
@@ -565,7 +676,7 @@ def topgg_webhook():
             {"_id": str(user_id)},
             {
                 "$inc": {"wallet": reward_amount},
-                "$set": {"last_vote": datetime.datetime.utcnow()}
+                "$set": {"last_vote": datetime.now()}
             },
             upsert=True
         )
@@ -764,153 +875,161 @@ def debug():
                           if not os.environ.get(k) and not config.get(k.split('_', 1)[1])]
     })
 
+# API Routes for Stats Management
+@app.route('/api/stats')
+def get_stats_api():
+    """Get all statistics"""
+    stats = load_stats()
+    return jsonify(stats)
+
+@app.route('/api/stats/update', methods=['POST'])
+def update_stats_endpoint():
+    """Dedicated endpoint for bot to update stats"""
+    return api_stats()  # Reuse the existing logic
+
+@app.route('/api/stats/realtime', methods=['POST'])
+def realtime_stats_update():
+    """Handle real-time command execution updates from bot"""
+    try:
+        data = request.get_json()
+        if not data or data.get('type') != 'command_executed':
+            return jsonify({"error": "Invalid real-time update data"}), 400
+        
+        # Store the real-time update (you could use a cache like Redis in production)
+        # For now, we'll just update the stats file immediately for development
+        stats = load_stats()
+        
+        # Update total commands
+        if 'total_commands' in data:
+            stats['commands']['total_executed'] = data['total_commands']
+        
+        # Update today's count
+        today = datetime.now().strftime('%Y-%m-%d')
+        daily_metrics = stats['commands'].get('daily_metrics', [])
+        
+        # Find today's entry or create it
+        updated = False
+        for metric in daily_metrics:
+            if metric['date'] == today:
+                metric['count'] = metric.get('count', 0) + 1
+                metric['timestamp'] = datetime.now().isoformat()
+                updated = True
+                break
+        
+        if not updated:
+            daily_metrics.append({
+                'date': today,
+                'count': 1,
+                'timestamp': datetime.now().isoformat()
+            })
+            stats['commands']['daily_metrics'] = daily_metrics
+        
+        # Update command types
+        if 'command' in data:
+            command_types = stats['commands'].get('command_types', {})
+            command_name = data['command']
+            command_types[command_name] = command_types.get(command_name, 0) + 1
+            stats['commands']['command_types'] = command_types
+        
+        save_stats(stats)
+        
+        return jsonify({
+            "status": "success", 
+            "message": "Real-time stats updated",
+            "updated_stats": {
+                "total_commands": stats['commands']['total_executed'],
+                "today_commands": next((m['count'] for m in daily_metrics if m['date'] == today), 0)
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error in real-time stats update: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/metrics/commands')
+def get_command_metrics():
+    """Get command metrics for charts"""
+    try:
+        stats_file = os.path.join('data', 'stats.json')
+        with open(stats_file, 'r') as f:
+            stats = json.load(f)
+        
+        daily_metrics = stats.get('commands', {}).get('daily_metrics', [])
+        
+        # Get last 7 days of data
+        last_7_days = daily_metrics[-7:] if len(daily_metrics) >= 7 else daily_metrics
+        
+        # Calculate totals and percentage change
+        total_last_7_days = sum(day.get('count', 0) for day in last_7_days)
+        
+        # Calculate percentage change (compare to previous 7 days)
+        percentage_change = 0
+        if len(daily_metrics) >= 14:
+            previous_7_days = daily_metrics[-14:-7]
+            total_previous_7_days = sum(day.get('count', 0) for day in previous_7_days)
+            if total_previous_7_days > 0:
+                percentage_change = round(((total_last_7_days - total_previous_7_days) / total_previous_7_days) * 100, 1)
+        
+        # Ensure we have 7 days of data (fill with zeros if needed)
+        while len(last_7_days) < 7:
+            last_7_days.insert(0, {'date': '', 'count': 0})
+        
+        return jsonify({
+            'daily_data': last_7_days,
+            'total_last_7_days': total_last_7_days,
+            'percentage_change': percentage_change,
+            'command_types': stats.get('commands', {}).get('command_types', {})
+        })
+        
+    except Exception as e:
+        print(f"Error getting command metrics: {e}")
+        # Return default data
+        return jsonify({
+            'daily_data': [{'date': '', 'count': 0} for _ in range(7)],
+            'total_last_7_days': 0,
+            'percentage_change': 0,
+            'command_types': {}
+        })
+
 # Error handlers
-@app.errorhandler(500)
-def server_error(e):
-    return jsonify({
-        'error': 'Internal Server Error',
-        'message': str(e),
-        'type': '500'
-    }), 500
-
 @app.errorhandler(404)
-def not_found(e):
-    return jsonify({
-        'error': 'Not Found',
-        'message': str(e),
-        'type': '404'
-    }), 404
-
-@app.errorhandler(404)
-def not_found_error(error):
+def not_found(error):
     """Handle 404 errors"""
-    if request.headers.get('Accept', '').startswith('application/json'):
-        return jsonify({"error": "Not found"}), 404
-    return render_template('home.html', stats=bot_stats), 404
+    return render_template('error.html', 
+                         error_code=404,
+                         error_message="Page not found",
+                         username=request.cookies.get('username')), 404
 
 @app.errorhandler(500)
 def internal_error(error):
     """Handle 500 errors"""
-    if request.headers.get('Accept', '').startswith('application/json'):
-        return jsonify({"error": "Internal server error"}), 500
-    return render_template('home.html', stats=bot_stats, error="Internal server error"), 500
+    return render_template('error.html',
+                         error_code=500,
+                         error_message="Internal server error",
+                         username=request.cookies.get('username')), 500
 
-def get_available_port(start_port, max_port=65535):
-    """Find first available port in range"""
-    import socket
-    for port in range(start_port, max_port + 1):
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind(('127.0.0.1', port))
-                s.close()
-                return port
-        except OSError:
-            continue
-    return None
+@app.errorhandler(403)
+def forbidden(error):
+    """Handle 403 errors"""
+    return render_template('error.html',
+                         error_code=403,
+                         error_message="Access forbidden",
+                         username=request.cookies.get('username')), 403
 
-def run(as_thread=False):
-    """Run the Flask application server
+# Set app secret key
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+
+if __name__ == '__main__':
+    # Set debug mode based on environment
+    debug_mode = os.environ.get('FLASK_ENV') == 'development'
     
-    Args:
-        as_thread (bool): If True, run in a separate thread for the Discord bot
-    """
-    default_port = int(os.environ.get('PORT', 5000))
-    port = get_available_port(default_port)
-    if not port:
-        port = get_available_port(8000)  # Try alternate port range
-    if not port:
-        raise RuntimeError("No available ports found")
-        
-    host = '0.0.0.0' if os.environ.get('FLASK_ENV') == 'production' else '127.0.0.1'
+    # Get port from environment variable or default to 5000
+    port = int(os.environ.get('PORT', 5000))
     
-    if as_thread:
-        import threading
-        from werkzeug.serving import make_server
-        
-        server = make_server(host, port, app, threaded=True)
-        print(f"Web server starting on http://{host}:{port}")
-        
-        def run_server():
-            server.serve_forever()
-            
-        server_thread = threading.Thread(target=run_server, daemon=True)
-        server_thread.start()
-    else:
-        # Only use debug mode when running directly (not in thread)
-        debug = os.environ.get('FLASK_ENV') != 'production'
-        app.run(host=host, port=port, debug=debug)
-
-def shutdown_server():
-    """Shutdown the Flask server (placeholder for now)"""
-    pass
-
-@app.route('/api/stats/live')
-def live_stats():
-    def generate():
-        while True:
-            # Read the latest stats from the file
-            try:
-                with open('data/stats.json', 'r') as f:
-                    stats = json.load(f)
-                    data = f"data: {json.dumps(stats)}\n\n"
-                    yield data
-            except Exception as e:
-                print(f"Error reading stats: {e}")
-                yield "data: {}\n\n"
-            time.sleep(1)  # Update every second
-
-    return Response(generate(), mimetype='text/event-stream')
-
-@app.route("/invite")
-def invite():
-    return redirect("https://discord.com/oauth2/authorize?client_id=828380019406929962&permissions=8&response_type=code&redirect_uri=https%3A%2F%2Fbronxbot.onrender.com%2Fcallback&integration_type=0&scope=bot+identify+guilds+applications.commands")
-
-@app.route('/api/lastfm/unlink', methods=['POST'])
-@login_required
-def lastfm_unlink():
-    """Unlink Last.fm account for the logged-in user."""
-    user_id = request.cookies.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'Not logged in'}), 401
-
-    if MONGODB_AVAILABLE and db is not None:
-        try:
-            result = db.users.update_one(
-                {"_id": str(user_id)},
-                {"$unset": {"lastfm": ""}}
-            )
-            if result.modified_count > 0:
-                return jsonify({'success': True, 'message': 'Last.fm account unlinked.'})
-            else:
-                return jsonify({'success': False, 'message': 'No Last.fm account linked.'})
-        except Exception as e:
-            app.logger.error(f"MongoDB error unlinking Last.fm: {e}")
-            return jsonify({'error': 'Failed to unlink Last.fm from database'}), 500
-    else:
-        # Fallback: Remove from JSON file
-        fallback_dir = "data"
-        fallback_path = os.path.join(fallback_dir, "lastfm_fallback.json")
-        try:
-            if os.path.exists(fallback_path):
-                with open(fallback_path, "r", encoding="utf-8") as f:
-                    fallback_data = json.load(f)
-                if str(user_id) in fallback_data:
-                    del fallback_data[str(user_id)]
-                    with open(fallback_path, "w", encoding="utf-8") as f:
-                        json.dump(fallback_data, f, indent=2)
-                    return jsonify({'success': True, 'message': 'Last.fm account unlinked.'})
-                else:
-                    return jsonify({'success': False, 'message': 'No Last.fm account linked.'})
-            else:
-                return jsonify({'success': False, 'message': 'No Last.fm account linked.'})
-        except Exception as e:
-            app.logger.error(f"Error unlinking Last.fm from fallback JSON: {e}")
-            return jsonify({'error': 'Failed to unlink Last.fm from file'}), 500
-
-if __name__ == "__main__":
-    try:
-        run()
-    except Exception as e:
-        print(f"Error starting server: {e}")
-        import sys
-        sys.exit(1)
+    print(f"Starting Flask app on port {port}")
+    print(f"Debug mode: {debug_mode}")
+    print(f"MongoDB available: {MONGODB_AVAILABLE}")
+    print(f"Discord configured: {bool(DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET)}")
+    
+    # Run the Flask app
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

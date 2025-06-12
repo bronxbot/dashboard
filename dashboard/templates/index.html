@@ -1,148 +1,274 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="transition-colors duration-300">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BronxBot Dashboard</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+        rel="stylesheet"
+        as="style"
+        onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
     
-    <!-- Favicon -->
+    <title>Dashboard - BronxBot</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/southbronx.png') }}">
     
-    <!-- Primary Meta Tags -->
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="title" content="BronxBot - Discord Bot Dashboard">
     <meta name="description" content="BronxBot is a versatile Discord bot featuring moderation, fun commands, giveaways, and server management tools. Manage your Discord server with ease!">
-    
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:title" content="BronxBot - Discord Bot Dashboard">
     <meta property="og:description" content="BronxBot is a versatile Discord bot featuring moderation, fun commands, giveaways, and server management tools. Manage your Discord server with ease!">
     <meta property="og:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.url }}">
-    <meta property="twitter:title" content="BronxBot - Discord Bot Dashboard">
-    <meta property="twitter:description" content="BronxBot is a versatile Discord bot featuring moderation, fun commands, giveaways, and server management tools. Manage your Discord server with ease!">
-    <meta property="twitter:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
     <meta name="theme-color" content="#5865F2">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        @keyframes spin360 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-360:hover {
+            animation: spin360 0.6s ease-in-out;
+        }
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-content">
-            <button id="nav-toggle" class="nav-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <a href="/" class="nav-brand">BronxBot</a>
-            <div class="nav-links collapsible">
-                <a href="/" class="nav-link active">Dashboard</a>
-                <a href="/settings" class="nav-link">Settings</a>
-                <a href="/servers" class="nav-link">Servers</a>
-                <a href="/logout" class="nav-link">Logout</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <aside class="sidebar">
-            <div class="sidebar-menu">
-                <a href="/" class="sidebar-item active">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-                <a href="/login" class="sidebar-item">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span>Login</span>
-                </a>
-                <a href="/#features" class="sidebar-item">
-                    <i class="fas fa-star"></i>
-                    <span>Features</span>
-                </a>
-                <a href="https://discord.gg/jENm4phpgv" class="sidebar-item">
-                    <i class="fab fa-discord"></i>
-                    <span>Support Server</span>
-                </a>
-                <a href="https://github.com/BronxBot/Dashboard" class="sidebar-item">
-                    <i class="fab fa-github"></i>
-                    <span>Source Code</span>
-                </a>
-                <a href="https://bronxbot.onrender.com/invite" class="sidebar-item">
-                    <i class="fab fa-plus"></i>
-                    <span>Invite The Bot</span>
-                </a>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <section class="hero">
-                <h1>Welcome back, {{ username }}! 👋</h1>
-                <p>Are you ready to take control of your Discord server?</p>
-            </section>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Servers</h3>
-                    <p>{{ stats.server_count }}</p>
+    <div class="relative flex size-full min-h-screen flex-col bg-slate-50 group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;'>
+        <div class="layout-container flex h-full grow flex-col">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf4] px-10 py-3">
+                <div class="flex items-center gap-4 text-[#0d141c] dark:text-white">
+                    <!-- Dark/Light Mode Toggle -->
+                    <button id="theme-toggle" class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out transform hover:scale-105">
+                        <!-- Sun Icon (Light Mode) -->
+                        <svg id="sun-icon" class="w-5 h-5 text-yellow-500 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                        </svg>
+                        <!-- Moon Icon (Dark Mode) -->
+                        <svg id="moon-icon" class="w-5 h-5 text-gray-300 transition-all duration-300 hidden" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-[#0d141c] text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                 </div>
-                <div class="stat-card">
-                    <h3>Users</h3>
-                    <p>{{ stats.user_count }}</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Uptime</h3>
-                    <p id="uptime" data-uptime="{{ stats.uptime }}">Calculating...</p>
-                </div>
-                <div class="stat-card">
-                    <h3>Latency</h3>
-                    <p>{{ stats.latency }}ms</p>
-                </div>
-            </div>
-
-                <!-- Add new shard status section -->
-                <div class="shard-status">
-                    <h2>🔋 Shard Status</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <h3>Total Servers</h3>
-                            <p>{{ stats.server_count|default(0)|thousands }}</p>
+                <div class="flex flex-1 justify-end gap-8">
+                    <div class="flex items-center gap-9">
+                        <a class="text-[#0d141c] text-sm font-medium leading-normal" href="/">Dashboard</a>
+                        <a class="text-[#0d141c] text-sm font-medium leading-normal" href="/servers">Servers</a>
+                        <a class="text-[#0d141c] text-sm font-medium leading-normal" href="https://discord.gg/jENm4phpgv">Support</a>
+                        <a class="text-[#0d141c] text-sm font-medium leading-normal" href="https://github.com/BronxBot/Dashboard">GitHub</a>
+                    </div>
+                    <a href="/logout" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#dc2626] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em]">
+                        <span class="truncate">Logout</span>
+                    </a>
+                    
+                    <!-- User Avatar Dropdown -->
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center gap-2 spin-360 focus:outline-none">
+                            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-transparent hover:border-blue-400 transition-all duration-300" 
+                                 style='background-image: url("https://cdn.discordapp.com/avatars/{{ request.cookies.get("user_id") }}/{{ request.cookies.get("avatar_hash", "default") }}.png?size=64");'
+                                 title="{{ request.cookies.get('username', 'User') }}">
+                            </div>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                            <div class="py-2">
+                                <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Logged in</p>
+                                </div>
+                                <a href="/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    Settings
+                                </a>
+                                <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H48V208h56A8,8,0,0,1,112,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L188.69,112H112a8,8,0,0,0,0,16h76.69l-18.35,18.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,221.66,122.34Z"></path>
+                                    </svg>
+                                    Log Out
+                                </a>
+                            </div>
                         </div>
-                        <div class="stat-card">
-                            <h3>Total Users</h3>
-                            <p>{{ stats.user_count|default(0)|thousands }}</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Latency</h3>
-                            <p>{{ "%.1f"|format(stats.latency|default(0)) }}ms</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Shards</h3>
-                            <p>{{ stats.shard_count }}</p>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="px-40 flex flex-1 justify-center py-5">
+                <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+                    <div class="flex flex-wrap justify-between gap-3 p-4">
+                        <div class="flex min-w-72 flex-col gap-3">
+                            <p class="text-[#0d141c] tracking-light text-[32px] font-bold leading-tight">Welcome back, {{ username }}! 👋</p>
+                            <p class="text-[#49739c] text-sm font-normal leading-normal">Ready to manage your Discord servers?</p>
                         </div>
                     </div>
 
-                    {% if stats.shard_stats %}
-                    <div class="shard-grid">
-                        {% for shard_id, shard in stats.shard_stats.items() %}
-                        <div class="shard-card {{ 'online' if shard.status == 'online' else 'offline' }}">
-                            <h4>
-                                {% if shard.status == 'online' %}🟢{% else %}🔴{% endif %}
-                                Shard {{ shard_id }}
-                            </h4>
-                            <p>Servers: {{ shard.guild_count }}</p>
-                            <p>Users: {{ shard.user_count }}</p>
-                            <p>Latency: {{ "%.1f"|format(shard.latency) }}ms</p>
-                            <p class="uptime">
-                                Online for: {{ shard.uptime }}
-                            </p>
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3 p-4">
+                        <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] bg-slate-50 p-4 flex-col">
+                            <div class="text-[#0d141c]" data-icon="Server" data-size="24px" data-weight="regular">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M32,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H40A8,8,0,0,1,32,64Zm8,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm176,48H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <h2 id="server-count" class="text-[#0d141c] text-xl font-bold leading-tight" data-count="{{ stats.guilds.count if stats.guilds else (stats.server_count if stats.server_count else 0) }}">{{ stats.guilds.count if stats.guilds else (stats.server_count if stats.server_count else 'N/A') }}<span class="stats-indicator"></span></h2>
+                                <p class="text-[#49739c] text-sm font-normal leading-normal">Total Servers</p>
+                            </div>
                         </div>
-                        {% endfor %}
+                        <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] bg-slate-50 p-4 flex-col">
+                            <div class="text-[#0d141c]" data-icon="Users" data-size="24px" data-weight="regular">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.7,87.63a8,8,0,0,1-10.07,5.37,8,8,0,0,1-5.37-10.07,80.69,80.69,0,0,0,0-53.86,8,8,0,0,1,15.44-4.14A96.69,96.69,0,0,1,250.7,195.63Zm-52.32-120a8,8,0,0,1,0,11.31A44,44,0,0,1,176,92a8,8,0,0,1,0-16,60,60,0,0,0,22.38-4.62A8,8,0,0,1,198.38,75.63Z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <h2 id="user-count" class="text-[#0d141c] text-xl font-bold leading-tight" data-count="{{ stats.performance.user_count if stats.performance else (stats.user_count if stats.user_count else 0) }}">{{ stats.performance.user_count if stats.performance else (stats.user_count if stats.user_count else 'N/A') }}</h2>
+                                <p class="text-[#49739c] text-sm font-normal leading-normal">Total Users</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] bg-slate-50 p-4 flex-col">
+                            <div class="text-[#0d141c]" data-icon="Clock" data-size="24px" data-weight="regular">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <h2 class="text-[#0d141c] text-xl font-bold leading-tight" id="uptime" data-uptime="{{ stats.uptime }}">{{ stats.uptime }}s</h2>
+                                <p class="text-[#49739c] text-sm font-normal leading-normal">Uptime</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] bg-slate-50 p-4 flex-col">
+                            <div class="text-[#0d141c]" data-icon="Lightning" data-size="24px" data-weight="regular">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <h2 class="text-[#0d141c] text-xl font-bold leading-tight">{{ stats.latency if stats.latency else 'N/A' }}ms</h2>
+                                <p class="text-[#49739c] text-sm font-normal leading-normal">Latency</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="p-4">
+                        <h2 class="text-[#0d141c] text-xl font-bold leading-tight mb-4">Quick Actions</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <a href="/servers" class="block">
+                                <div class="border border-[#cedbe8] rounded-lg p-6 hover:shadow-md transition-shadow bg-white hover:bg-gray-50">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-[#0c7ff2] rounded-lg flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="white" viewBox="0 0 256 256">
+                                                <path d="M208,40H48A16,16,0,0,0,32,56v58.78c0,89.61,75.82,119.34,91,124.39a15.53,15.53,0,0,0,10,0c15.2-5.05,91-34.78,91-124.39V56A16,16,0,0,0,208,40Zm0,74.79c0,78.42-66.35,104.62-80,109.18-13.53-4.51-80-30.69-80-109.18V56H208Z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="text-[#0d141c] font-semibold text-lg">Manage Servers</h3>
+                                            <p class="text-[#49739c] text-sm">Configure bot settings for your Discord servers</p>
+                                        </div>
+                                        <div class="text-[#0c7ff2]">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                                                <path d="m221.66,133.66-72,72a8,8,0,0,1-11.32-11.32L196.69,136H40a8,8,0,0,1,0-16H196.69L138.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,221.66,133.66Z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                            
+                            <a href="https://discord.com/api/oauth2/authorize?client_id={{ config.CLIENT_ID }}&permissions=8&scope=bot%20applications.commands" target="_blank" rel="noopener" class="block">
+                                <div class="border border-[#cedbe8] rounded-lg p-6 hover:shadow-md transition-shadow bg-white hover:bg-gray-50">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="white" viewBox="0 0 256 256">
+                                                <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="flex-1">
+                                            <h3 class="text-[#0d141c] font-semibold text-lg">Add Bot to Server</h3>
+                                            <p class="text-[#49739c] text-sm">Invite BronxBot to a new Discord server</p>
+                                        </div>
+                                        <div class="text-green-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                                                <path d="M200,64V168a8,8,0,0,1-16,0V83.31L69.66,197.66a8,8,0,0,1-11.32-11.32L172.69,72H88a8,8,0,0,1,0-16H192A8,8,0,0,1,200,64Z"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Shard Status (if available) -->
+                    {% if stats.shards %}
+                    <div class="p-4">
+                        <h2 class="text-[#0d141c] text-xl font-bold leading-tight mb-4">🔋 Shard Status</h2>
+                        <div class="bg-white rounded-lg border border-[#cedbe8] p-6">
+                            <div class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
+                                {% for shard in stats.shards %}
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-[#0d141c]">{{ shard.id }}</div>
+                                    <div class="text-sm text-[#49739c]">Shard {{ shard.id }}</div>
+                                    <div class="mt-2">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium {{ 'bg-green-100 text-green-800' if shard.status == 'online' else 'bg-red-100 text-red-800' }}">
+                                            {{ shard.status|title }}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                     {% endif %}
+
+                    <!-- Help Section -->
+                    <div class="p-4">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                            <h3 class="text-[#0d141c] font-semibold text-lg mb-2">Need Help?</h3>
+                            <p class="text-[#49739c] text-sm mb-4">Check out our resources to get the most out of BronxBot.</p>
+                            <div class="flex flex-wrap gap-3">
+                                <a href="https://discord.gg/jENm4phpgv" target="_blank" rel="noopener"
+                                   class="inline-flex items-center px-3 py-2 rounded-lg bg-[#5865F2] text-white text-sm font-medium hover:bg-[#4752C4] transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256" class="mr-2">
+                                        <path d="M104,140a12,12,0,1,1-12-12A12,12,0,0,1,104,140Zm60-12a12,12,0,1,0,12,12A12,12,0,0,0,164,128Zm74.45,64.9-67,29.71a16.17,16.17,0,0,1-21.71-9.1l-8.11-22q-6.72.45-13.63.46t-13.63-.46l-8.11,22a16.18,16.18,0,0,1-21.71,9.1l-67-29.71a15.93,15.93,0,0,1-9.06-18.51L38,58A16.07,16.07,0,0,1,48,42.73c21.81-10.64,50.17-17.76,80-17.73s58.2,7.09,80,17.73A16.07,16.07,0,0,1,218,58l29.53,117.38A15.93,15.93,0,0,1,238.45,192.9ZM203.61,62.75c-18.49-9.05-43.34-14.75-75.61-14.75s-57.12,5.7-75.61,14.75L32,178.26l67,29.71,8.11-22c18.12,1.72,37.64,1.72,55.76,0l8.11,22,67-29.71Z"></path>
+                                    </svg>
+                                    Support Server
+                                </a>
+                                <a href="https://github.com/BronxBot/Dashboard" target="_blank" rel="noopener"
+                                   class="inline-flex items-center px-3 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256" class="mr-2">
+                                        <path d="M208.31,75.68A59.78,59.78,0,0,0,202.93,28,8,8,0,0,0,196,24a59.75,59.75,0,0,0-48,24H124A59.75,59.75,0,0,0,76,24a8,8,0,0,0-6.93,4,59.78,59.78,0,0,0-5.38,47.68A58.14,58.14,0,0,0,56,104v8a56.06,56.06,0,0,0,48.44,55.47A39.8,39.8,0,0,0,96,192v8H72a24,24,0,0,1-24-24A40,40,0,0,0,8,136a8,8,0,0,0,0,16,24,24,0,0,1,24,24,40,40,0,0,0,40,40H96v16a8,8,0,0,0,16,0V192a24,24,0,0,1,48,0v40a8,8,0,0,0,16,0V192a39.8,39.8,0,0,0-8.44-24.53A56.06,56.06,0,0,0,216,112v-8A58.14,58.14,0,0,0,208.31,75.68ZM200,112a40,40,0,0,1-40,40H112a40,40,0,0,1-40-40v-8a41.74,41.74,0,0,1,6.9-22.48A8,8,0,0,0,80,73.83a43.81,43.81,0,0,1,.79-33.58,43.88,43.88,0,0,1,32.32,20.06A8,8,0,0,0,119.82,64h32.35a8,8,0,0,0,6.74-3.69,43.87,43.87,0,0,1,32.32-20.06A43.81,43.81,0,0,1,192,73.83a8.09,8.09,0,0,0,1,7.65A41.72,41.72,0,0,1,200,104Z"></path>
+                                    </svg>
+                                    Source Code
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
-        </main>
+            </div>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

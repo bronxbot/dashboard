@@ -1,80 +1,150 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Server - BronxBot</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+        rel="stylesheet"
+        as="style"
+        onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
     
-    <!-- Favicon -->
+    <title>Select Server - BronxBot</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/southbronx.png') }}">
     
-    <!-- Primary Meta Tags -->
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="title" content="BronxBot - Select Server">
     <meta name="description" content="Choose which Discord server to configure with BronxBot. Manage multiple servers easily from one central dashboard.">
-    
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:title" content="BronxBot - Select Server">
     <meta property="og:description" content="Choose which Discord server to configure with BronxBot. Manage multiple servers easily from one central dashboard.">
     <meta property="og:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
+    <meta name="theme-color" content="#5865F2">
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.url }}">
-    <meta property="twitter:title" content="BronxBot - Select Server">
-    <meta property="twitter:description" content="Choose which Discord server to configure with BronxBot. Manage multiple servers easily from one central dashboard.">
-    <meta property="twitter:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-content">
-            <button id="nav-toggle" class="nav-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <a href="/" class="nav-brand">BronxBot</a>
-            <div class="nav-links collapsible">
-                <a href="/" class="nav-link">Dashboard</a>
-                <a href="/settings" class="nav-link">Settings</a>
-                <a href="/servers" class="nav-link active">Servers</a>
-                <a href="/logout" class="nav-link">Logout</a>
+    <div class="relative flex size-full min-h-screen flex-col bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;'>
+        <div class="layout-container flex h-full grow flex-col">
+            <!-- Header -->
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-white/10 px-10 py-3 backdrop-blur-sm">
+                <div class="flex items-center gap-4 text-white">
+                    <div class="size-4">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
+                                fill="currentColor"
+                            ></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
+                </div>
+                <div class="flex flex-1 justify-end gap-8">
+                    <div class="flex items-center gap-9">
+                        <a class="text-white/80 text-sm font-medium leading-normal hover:text-white transition-colors" href="/">Dashboard</a>
+                        <a class="text-white/80 text-sm font-medium leading-normal hover:text-white transition-colors" href="/servers">Servers</a>
+                        <a class="text-white text-sm font-medium leading-normal" href="/settings">Settings</a>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        {% if session.user_id %}
+                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8" 
+                             style="background-image: url('https://cdn.discordapp.com/avatars/{{ session.user_id }}/{{ session.user_avatar }}.png?size=64');"></div>
+                        {% endif %}
+                        <a href="/logout" class="text-white/80 hover:text-white transition-colors text-sm font-medium">Logout</a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <div class="px-10 flex flex-1 justify-center py-5">
+                <div class="layout-content-container flex flex-col max-w-6xl flex-1">
+                    <div class="flex flex-wrap justify-between gap-3 p-4">
+                        <div class="flex min-w-72 flex-col gap-3">
+                            <p class="text-white tracking-light text-[32px] font-bold leading-tight">Select a Server</p>
+                            <p class="text-white/60 text-sm font-normal leading-normal">Choose a server to configure BronxBot settings</p>
+                        </div>
+                    </div>
+
+                    <!-- Server Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
+                        {% for guild in guilds %}
+                        <div class="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:border-white/40 transition-all {{ 'opacity-50 cursor-not-allowed' if not guild.bot_present else 'hover:bg-white/20' }}">
+                            {% if guild.bot_present %}
+                            <a href="/servers/{{ guild.id }}/settings" class="block p-6">
+                            {% else %}
+                            <div class="block p-6">
+                            {% endif %}
+                                <div class="flex items-center gap-4">
+                                    <div class="w-16 h-16 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+                                        {% if guild.icon_url %}
+                                            <img src="{{ guild.icon_url }}" alt="{{ guild.name }}" class="w-full h-full object-cover">
+                                        {% else %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" fill="white" viewBox="0 0 256 256">
+                                                <path d="M176,24H80A16,16,0,0,0,64,40V216a8,8,0,0,0,11.58,7.16L128,200l52.42,23.16A8,8,0,0,0,192,216V40A16,16,0,0,0,176,24Z"></path>
+                                            </svg>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-1">
+                                        <h3 class="text-white text-lg font-bold leading-tight truncate">{{ guild.name }}</h3>
+                                        <div class="flex items-center gap-2 mt-2">
+                                            {% if guild.bot_present %}
+                                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                                <span class="text-green-400 text-sm font-medium">Bot Active</span>
+                                            {% else %}
+                                                <div class="w-2 h-2 bg-red-400 rounded-full"></div>
+                                                <span class="text-red-400 text-sm font-medium">Bot Not Added</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if guild.bot_present %}
+                                    <div class="text-white/60">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                                            <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path>
+                                        </svg>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% if not guild.bot_present %}
+                                <div class="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                                    <p class="text-yellow-300 text-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256" class="inline mr-2">
+                                            <path d="M236.8,188.09,149.35,36.22h0a24,24,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24,24,0,0,0,40.55,224h174.9a24,24,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"></path>
+                                        </svg>
+                                        Please add BronxBot to this server first
+                                    </p>
+                                </div>
+                                {% endif %}
+                            {% if guild.bot_present %}
+                            </a>
+                            {% else %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- No servers message -->
+                    {% if not guilds %}
+                    <div class="flex flex-col items-center justify-center py-20">
+                        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" fill="white" viewBox="0 0 256 256">
+                                <path d="M176,24H80A16,16,0,0,0,64,40V216a8,8,0,0,0,11.58,7.16L128,200l52.42,23.16A8,8,0,0,0,192,216V40A16,16,0,0,0,176,24Z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-white text-xl font-bold mb-2">No Servers Found</h3>
+                        <p class="text-white/60 text-center mb-6">You don't have any Discord servers where you can manage BronxBot.</p>
+                        <a href="https://discord.com/api/oauth2/authorize?client_id={{ config.CLIENT_ID }}&permissions=8&scope=bot%20applications.commands"
+                           class="inline-flex items-center px-6 py-3 bg-[#0c7ff2] text-white font-bold rounded-lg hover:bg-[#0a6ad1] transition-colors">
+                            Add BronxBot to Server
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </nav>
-
-    <div class="container">
-        <main class="main-content centered">
-            <section class="server-select">
-                <h1>Select a Server</h1>
-                <p>Choose a server to configure BronxBot settings</p>
-                
-                <div class="server-grid">
-                    {% for guild in guilds %}
-                        <a href="{{ '/servers/' + guild.id + '/settings' if guild.bot_present else '#' }}" 
-                           class="server-card {{ 'disabled' if not guild.bot_present }}">
-                            <div class="server-icon">
-                                {% if guild.icon_url %}
-                                    <img src="{{ guild.icon_url }}" alt="{{ guild.name }}">
-                                {% else %}
-                                    <i class="fas fa-server"></i>
-                                {% endif %}
-                            </div>
-                            <div class="server-info">
-                                <h3>{{ guild.name }}</h3>
-                                <span class="server-status {{ 'active' if guild.bot_present else 'inactive' }}">
-                                    {{ 'Bot Active' if guild.bot_present else 'Bot Not Added' }}
-                                </span>
-                            </div>
-                        </a>
-                    {% endfor %}
-                </div>
-            </section>
-        </main>
     </div>
-
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

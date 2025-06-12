@@ -1,98 +1,681 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="transition-colors duration-300">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BronxBot - Home</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+        rel="stylesheet"
+        as="style"
+        onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
     
-    <!-- Favicon -->
+    <title>BronxBot - Your Discord Server's Best Friend</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/southbronx.png') }}">
     
-    <!-- Primary Meta Tags -->
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="title" content="BronxBot - Your Discord Server's Best Friend">
     <meta name="description" content="BronxBot brings powerful moderation, fun games, economy system, and community management tools to your Discord server. Easy to use and highly customizable!">
-    
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:title" content="BronxBot - Your Discord Server's Best Friend">
     <meta property="og:description" content="BronxBot brings powerful moderation, fun games, economy system, and community management tools to your Discord server. Easy to use and highly customizable!">
     <meta property="og:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.url }}">
-    <meta property="twitter:title" content="BronxBot - Your Discord Server's Best Friend">
-    <meta property="twitter:description" content="BronxBot brings powerful moderation, fun games, economy system, and community management tools to your Discord server. Easy to use and highly customizable!">
-    <meta property="twitter:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
     <meta name="theme-color" content="#5865F2">
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        @keyframes spin360 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-360:hover {
+            animation: spin360 0.6s ease-in-out;
+        }
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        @keyframes heroFloat {
+            0%, 100% { 
+                background-position: center center;
+            }
+            25% { 
+                background-position: 52% 48%;
+            }
+            50% { 
+                background-position: center 52%;
+            }
+            75% { 
+                background-position: 48% 48%;
+            }
+        }
+        
+        @keyframes patternPulse {
+            0%, 100% { 
+                opacity: 0.8;
+            }
+            50% { 
+                opacity: 1;
+            }
+        }
+        
+        #hero-background {
+            background-attachment: fixed;
+            transition: background-position 0.1s ease-out;
+            cursor: crosshair;
+        }
+        
+        #hero-background.light-theme {
+            background: linear-gradient(135deg, rgba(16, 24, 40, 0.6) 0%, rgba(30, 41, 59, 0.7) 50%, rgba(51, 65, 85, 0.6) 100%), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="a" width="29" height="50.115" patternTransform="rotate(20)scale(5)" patternUnits="userSpaceOnUse"><rect width="100%25" height="100%25" fill="%23047857"/><path fill="none" stroke="%2306b6d4" stroke-width="2.5" d="M14.498 16.858 0 8.488.002-8.257l14.5-8.374L29-8.26l-.002 16.745zm0 50.06L0 58.548l.002-16.745 14.5-8.373L29 41.8l-.002 16.744zM28.996 41.8l-14.498-8.37.002-16.744L29 8.312l14.498 8.37-.002 16.745zm-29 0-14.498-8.37.002-16.744L0 8.312l14.498 8.37-.002 16.745z" class="hexagon-path"><animate attributeName="stroke-width" values="2.5;4;2.5" dur="4s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" values="1;1.02;1" dur="6s" repeatCount="indefinite"/></path><circle cx="14.5" cy="25" r="1.5" fill="%2310b981" opacity="0.8" class="hex-circle"><animate attributeName="r" values="1.5;2.2;1.5" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0.4;0.8" dur="3s" repeatCount="indefinite"/></circle><circle cx="7.25" cy="12.5" r="1" fill="%230ea5e9" opacity="0.9" class="hex-circle"><animate attributeName="r" values="1;1.6;1" dur="2.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2.5s" repeatCount="indefinite"/></circle><circle cx="21.75" cy="37.5" r="1" fill="%2322d3ee" opacity="0.7" class="hex-circle"><animate attributeName="r" values="1;1.8;1" dur="3.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0.2;0.7" dur="3.5s" repeatCount="indefinite"/></circle></pattern></defs><rect width="800%25" height="800%25" fill="url(%23a)" transform="translate(-55 -15)"/></svg>') center/cover;
+        }
+        
+        #hero-background.dark-theme {
+            background: linear-gradient(135deg, rgba(16, 24, 40, 0.8) 0%, rgba(30, 41, 59, 0.9) 50%, rgba(51, 65, 85, 0.8) 100%), url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"><defs><pattern id="a" width="29" height="50.115" patternTransform="rotate(20)scale(5)" patternUnits="userSpaceOnUse"><rect width="100%25" height="100%25" fill="%23581c87"/><path fill="none" stroke="%239333ea" stroke-width="2.5" d="M14.498 16.858 0 8.488.002-8.257l14.5-8.374L29-8.26l-.002 16.745zm0 50.06L0 58.548l.002-16.745 14.5-8.373L29 41.8l-.002 16.744zM28.996 41.8l-14.498-8.37.002-16.744L29 8.312l14.498 8.37-.002 16.745zm-29 0-14.498-8.37.002-16.744L0 8.312l14.498 8.37-.002 16.745z" class="hexagon-path"><animate attributeName="stroke-width" values="2.5;4;2.5" dur="4s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" values="1;1.02;1" dur="6s" repeatCount="indefinite"/></path><circle cx="14.5" cy="25" r="1.5" fill="%23a855f7" opacity="0.8" class="hex-circle"><animate attributeName="r" values="1.5;2.2;1.5" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.8;0.4;0.8" dur="3s" repeatCount="indefinite"/></circle><circle cx="7.25" cy="12.5" r="1" fill="%23c084fc" opacity="0.9" class="hex-circle"><animate attributeName="r" values="1;1.6;1" dur="2.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.9;0.3;0.9" dur="2.5s" repeatCount="indefinite"/></circle><circle cx="21.75" cy="37.5" r="1" fill="%23ddd6fe" opacity="0.7" class="hex-circle"><animate attributeName="r" values="1;1.8;1" dur="3.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.7;0.2;0.7" dur="3.5s" repeatCount="indefinite"/></circle></pattern></defs><rect width="800%25" height="800%25" fill="url(%23a)" transform="translate(-55 -15)"/></svg>') center/cover;
+        }
+        
+        /* Cursor interaction overlay */
+        #hero-cursor-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 5;
+            background: radial-gradient(circle 150px at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                        rgba(6, 182, 212, 0.15) 0%, 
+                        rgba(6, 182, 212, 0.05) 40%, 
+                        transparent 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .dark #hero-cursor-effect {
+            background: radial-gradient(circle 150px at var(--mouse-x, 50%) var(--mouse-y, 50%), 
+                        rgba(147, 51, 234, 0.15) 0%, 
+                        rgba(147, 51, 234, 0.05) 40%, 
+                        transparent 70%);
+        }
+        
+        #hero-background:hover #hero-cursor-effect {
+            opacity: 1;
+        }
+        
+        #hero-background::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 70%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+            animation: patternPulse 4s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        /* Feature card hover effects */
+        .feature-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .feature-card:hover::before {
+            left: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 
+                        0 0 0 1px rgba(6, 182, 212, 0.2),
+                        0 0 20px rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.3);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.95));
+        }
+        
+        .dark .feature-card:hover {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 
+                        0 0 0 1px rgba(147, 51, 234, 0.3),
+                        0 0 20px rgba(147, 51, 234, 0.2);
+            border-color: rgba(147, 51, 234, 0.4);
+            background: linear-gradient(135deg, rgba(31, 41, 55, 0.9), rgba(55, 65, 81, 0.95));
+        }
+        
+        .feature-card .feature-icon {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .feature-card:hover .feature-icon {
+            color: #06b6d4;
+            filter: drop-shadow(0 4px 8px rgba(6, 182, 212, 0.3));
+        }
+        
+        .dark .feature-card:hover .feature-icon {
+            color: #9333ea;
+            filter: drop-shadow(0 4px 8px rgba(147, 51, 234, 0.3));
+        }
+        
+        .feature-card .feature-title {
+            transition: color 0.3s ease;
+        }
+        
+        .feature-card:hover .feature-title {
+            color: #0891b2;
+        }
+        
+        .dark .feature-card:hover .feature-title {
+            color: #a855f7;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* Cursor interaction styles */
+        .cursor-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 1;
+            background: radial-gradient(
+                200px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                rgba(6, 182, 212, 0.15) 0%,
+                rgba(6, 182, 212, 0.1) 40%,
+                transparent 70%
+            );
+        }
+        
+        .dark .cursor-overlay {
+            background: radial-gradient(
+                200px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                rgba(147, 51, 234, 0.2) 0%,
+                rgba(147, 51, 234, 0.1) 40%,
+                transparent 70%
+            );
+        }
+        
+        .cursor-ripple {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            animation: ripple 0.6s ease-out;
+            background: radial-gradient(
+                circle,
+                rgba(6, 182, 212, 0.3) 0%,
+                rgba(6, 182, 212, 0.1) 70%,
+                transparent 100%
+            );
+        }
+        
+        .dark .cursor-ripple {
+            background: radial-gradient(
+                circle,
+                rgba(147, 51, 234, 0.4) 0%,
+                rgba(147, 51, 234, 0.2) 70%,
+                transparent 100%
+            );
+        }
+        
+        @keyframes ripple {
+            to {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+            }
+        }
+        
+        /* Enhanced hexagon interaction */
+        .hero-background:hover .light-theme::before {
+            animation-duration: 3s;
+        }
+        
+        .hero-background:hover .dark-theme::before {
+            animation-duration: 3s;
+        }
+    </style>
 </head>
-<body class="with-fixed-sidebar">
-    <div class="container">
-        <aside class="sidebar fixed">
-            <div class="sidebar-header">
-                <h2>BronxBot</h2>
-            </div>
-            <div class="sidebar-menu">
-                <a href="/" class="sidebar-item active">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-                <a href="/login" class="sidebar-item">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span>Login</span>
-                </a>
-                <a href="/#features" class="sidebar-item">
-                    <i class="fas fa-star"></i>
-                    <span>Features</span>
-                </a>
-                <a href="https://discord.gg/jENm4phpgv" class="sidebar-item">
-                    <i class="fab fa-discord"></i>
-                    <span>Support Server</span>
-                </a>
-                <a href="https://github.com/BronxBot/Dashboard" class="sidebar-item">
-                    <i class="fab fa-github"></i>
-                    <span>Source Code</span>
-                </a>
-                <a href="https://bronxbot.onrender.com/invite" class="sidebar-item">
-                    <i class="fab fa-plus"></i>
-                    <span>Invite The Bot</span>
-                </a>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <section class="hero">
-                <h1>Welcome to BronxBot</h1>
-                <p>The ultimate Discord bot for your community</p>
-            </section>
-
-            <div id="features" class="features">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h3>Easy to Use</h3>
-                        <p><i class="fas fa-smile"></i></p>
+<body>
+    <div class="relative flex size-full min-h-screen flex-col bg-slate-50 dark:bg-gray-900 group/design-root overflow-x-hidden transition-colors duration-300" style='font-family: Inter, "Noto Sans", sans-serif;'>
+        <div class="layout-container flex h-full grow flex-col">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf4] dark:border-b-gray-700 px-4 md:px-10 py-3 bg-white dark:bg-gray-800 transition-colors duration-300">
+                <div class="flex items-center gap-4 text-[#0d141c] dark:text-white">
+                    <!-- Dark/Light Mode Toggle -->
+                    <button id="theme-toggle" class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out transform hover:scale-105">
+                        <!-- Sun Icon (Light Mode) -->
+                        <svg id="sun-icon" class="w-5 h-5 text-yellow-500 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                        </svg>
+                        <!-- Moon Icon (Dark Mode) -->
+                        <svg id="moon-icon" class="w-5 h-5 text-gray-300 transition-all duration-300 hidden" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                        </svg>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6">
+                            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-500">
+                                <path
+                                    d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
+                                    fill="currentColor"
+                                ></path>
+                            </svg>
+                        </div>
+                        <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                     </div>
-                    <div class="stat-card">
-                        <h3>Customizable</h3>
-                        <p><i class="fas fa-sliders-h"></i></p>
+                </div>
+
+                <!-- Mobile hamburger button -->
+                <button id="mobile-menu-button" class="md:hidden flex items-center justify-center w-10 h-10 text-[#0d141c] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex flex-1 justify-end gap-8">
+                    <div class="flex items-center gap-9">
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="#features">Features</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/faq">FAQ</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="https://github.com/BronxBot/Dashboard">GitHub</a>
                     </div>
-                    <div class="stat-card">
-                        <h3>24/7 Online</h3>
-                        <p><i class="fas fa-clock"></i></p>
+                    <div class="flex gap-2">
+                        <a href="/invite?ref=home"
+                           class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#e7edf4] dark:bg-gray-700 text-[#0d141c] dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#d1dce7] dark:hover:bg-gray-600 transition-colors">
+                            <span class="truncate">Invite Bot</span>
+                        </a>
+                        {% if request.cookies.get('user_id') %}
+                        <!-- User is logged in - show avatar and dashboard link -->
+                        <a href="/"
+                           class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#0c7ff2] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#0a6ad1] transition-colors">
+                            <span class="truncate">Dashboard</span>
+                        </a>
+                        <div class="flex items-center gap-2">
+                            <div class="relative">
+                                <button id="user-dropdown-toggle" class="flex items-center gap-2 hover:opacity-80 transition-opacity spin-360">
+                                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#0c7ff2]" 
+                                         style='background-image: url("https://cdn.discordapp.com/avatars/{{ request.cookies.get("user_id") }}/{{ request.cookies.get("avatar_hash", "") }}.png?size=64");'
+                                         title="{{ request.cookies.get('username', 'User') }}">
+                                    </div>
+                                </button>
+                                
+                                <!-- Dropdown Menu -->
+                                <div id="user-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                                    <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
+                                        <p class="text-xs text-gray-500 dark:text-gray-400">#{{ request.cookies.get('user_id', '')[-4:] if request.cookies.get('user_id') else '' }}</p>
+                                    </div>
+                                    {% if request.cookies.get('user_id') %}
+                                    <a href="/" class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                        </svg>
+                                        Admin Dashboard
+                                    </a>
+                                    {% endif %}
+                                    <a href="/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                        Settings
+                                    </a>
+                                    <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                        </svg>
+                                        Logout
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- User is not logged in - show login button -->
+                        <a href="/login"
+                           class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#0c7ff2] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#0a6ad1] transition-colors">
+                            <span class="truncate">Login</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </header>
+
+            <!-- Mobile navigation menu -->
+            <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-gray-800 border-b border-[#e7edf4] dark:border-gray-700 px-4 py-4 transition-colors duration-300">
+                <div class="flex flex-col gap-4">
+                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="#features">Features</a>
+                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="/faq">FAQ</a>
+                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
+                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="https://github.com/BronxBot/Dashboard">GitHub</a>
+                    <div class="flex flex-col gap-2 pt-2 border-t border-[#e7edf4] dark:border-gray-700">
+                        <a href="/invite?ref=home"
+                           class="flex cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-[#e7edf4] dark:bg-gray-700 text-[#0d141c] dark:text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#d1dce7] dark:hover:bg-gray-600 transition-colors">
+                            <span class="truncate">Invite Bot</span>
+                        </a>
+                        <a href="/login"
+                           class="flex cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-[#0c7ff2] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#0a6ad1] transition-colors">
+                            <span class="truncate">Login</span>
+                        </a>
                     </div>
                 </div>
             </div>
-            <div style="text-align: center; margin-top: 20px;">
-                
-                <a href="/login" class="btn btn-primary">Login with Discord</a>
+
+            <!-- Hero Section -->
+            <div class="@container">
+                <div class="@[480px]:p-4">
+                    <div
+                        id="hero-background"
+                        class="hero-background light-theme relative flex min-h-[480px] flex-col gap-6 bg-cover bg-center bg-no-repeat @[480px]:gap-8 @[480px]:rounded-lg items-center justify-center p-4"
+                        style="cursor: crosshair;"
+                    >
+                        <!-- Cursor interaction overlay -->
+                        <div id="cursor-overlay" class="cursor-overlay"></div>
+                        
+                        <div class="relative z-10 flex flex-col gap-2 text-center">
+                            <h1
+                                class="text-white text-4xl font-black leading-tight tracking-[-0.033em] @[480px]:text-5xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em]"
+                            >
+                                BronxBot
+                            </h1>
+                            <h2 class="text-white text-sm font-normal leading-normal @[480px]:text-base @[480px]:font-normal @[480px]:leading-normal">
+                                A versatile Discord bot designed to enhance your server with a wide range of features, from moderation to entertainment. Open-source and community-driven,
+                                BronxBot is constantly evolving to meet your needs.
+                            </h2>
+                        </div>
+                        <div class="relative z-10 flex-wrap gap-3 flex justify-center">
+                            <a href=/invite?ref=home
+                               class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#0c7ff2] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]">
+                                <span class="truncate">Invite Bot</span>
+                            </a>
+                            <a href="/login"
+                               class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#e7edf4] text-[#0d141c] text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em]">
+                                <span class="truncate">Get Started</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </main>
+
+            <!-- Stats Section -->
+            <div class="flex flex-col gap-10 px-4 py-10 @container">
+                <div class="flex flex-col gap-4">
+                    <h1 class="text-[#0d141c] dark:text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px] transition-colors duration-300">
+                        Trusted by Communities
+                    </h1>
+                    <p class="text-[#0d141c] dark:text-gray-300 text-base font-normal leading-normal max-w-[720px] transition-colors duration-300">
+                        Join tons of Discord servers already using BronxBot to enhance their community experience.
+                    </p>
+                </div>
+                <div class="grid grid-cols-[repeat(auto-fit,minmax(158px,1fr))] gap-3 p-0">
+                    <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] dark:border-gray-600 bg-slate-50 dark:bg-gray-800 p-4 flex-col transition-colors duration-300">
+                        <div class="text-[#0d141c] dark:text-white" data-icon="Server" data-size="24px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M32,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H40A8,8,0,0,1,32,64Zm8,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm176,48H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <h2 class="text-[#0d141c] dark:text-white text-base font-bold leading-tight transition-colors duration-300">{{ stats.server_count if stats.server_count else '100+' }} Servers</h2>
+                            <p class="text-[#49739c] dark:text-gray-400 text-sm font-normal leading-normal transition-colors duration-300">Active Discord communities using BronxBot</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] dark:border-gray-600 bg-slate-50 dark:bg-gray-800 p-4 flex-col transition-colors duration-300">
+                        <div class="text-[#0d141c] dark:text-white" data-icon="Users" data-size="24px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M117.25,157.92a60,60,0,1,0-66.5,0A95.83,95.83,0,0,0,3.53,195.63a8,8,0,1,0,13.4,8.74,80,80,0,0,1,134.14,0,8,8,0,0,0,13.4-8.74A95.83,95.83,0,0,0,117.25,157.92ZM40,108a44,44,0,1,1,44,44A44.05,44.05,0,0,1,40,108Zm210.7,87.63a8,8,0,0,1-10.07,5.37,8,8,0,0,1-5.37-10.07,80.69,80.69,0,0,0,0-53.86,8,8,0,0,1,15.44-4.14A96.69,96.69,0,0,1,250.7,195.63Zm-52.32-120a8,8,0,0,1,0,11.31A44,44,0,0,1,176,92a8,8,0,0,1,0-16,60,60,0,0,0,22.38-4.62A8,8,0,0,1,198.38,75.63Z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <h2 class="text-[#0d141c] dark:text-white text-base font-bold leading-tight transition-colors duration-300">{{ stats.user_count if stats.user_count else '50K+' }} Users</h2>
+                            <p class="text-[#49739c] dark:text-gray-400 text-sm font-normal leading-normal transition-colors duration-300">Members enjoying BronxBot features daily</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] dark:border-gray-600 bg-slate-50 dark:bg-gray-800 p-4 flex-col transition-colors duration-300">
+                        <div class="text-[#0d141c] dark:text-white" data-icon="Lightning" data-size="24px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <h2 class="text-[#0d141c] dark:text-white text-base font-bold leading-tight transition-colors duration-300">{{ stats.latency if stats.latency else '< 50' }}ms</h2>
+                            <p class="text-[#49739c] dark:text-gray-400 text-sm font-normal leading-normal transition-colors duration-300">Lightning-fast response times</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div id="features" class="flex flex-col gap-10 px-4 py-10 @container">
+                <div class="flex flex-col gap-4">
+                    <h1 class="text-[#0d141c] dark:text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px] transition-colors duration-300">
+                        Key Features
+                    </h1>
+                    <p class="text-[#0d141c] dark:text-gray-300 text-base font-normal leading-normal max-w-[720px] transition-colors duration-300">
+                        Explore the diverse capabilities of BronxBot, designed to enhance your Discord server experience.
+                    </p>
+                </div>
+                <div class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-3 p-0">
+                    <div class="feature-card flex flex-1 gap-3 rounded-lg border border-[#cedbe8] dark:border-gray-600 bg-slate-50 dark:bg-gray-800 p-4 flex-col transition-colors duration-300">
+                        <div class="feature-icon text-[#0d141c] dark:text-white transition-colors duration-300" data-icon="Shield" data-size="24px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M208,40H48A16,16,0,0,0,32,56v58.78c0,89.61,75.82,119.34,91,124.39a15.53,15.53,0,0,0,10,0c15.2-5.05,91-34.78,91-124.39V56A16,16,0,0,0,208,40Zm0,74.79c0,78.42-66.35,104.62-80,109.18-13.53-4.51-80-30.69-80-109.18V56H208Z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <h2 class="feature-title text-[#0d141c] dark:text-white text-base font-bold leading-tight transition-colors duration-300">Moderation</h2>
+                            <p class="text-[#49739c] dark:text-gray-400 text-sm font-normal leading-normal transition-colors duration-300">Keep your server safe and organized with powerful moderation tools.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card flex flex-1 gap-3 rounded-lg border border-[#cedbe8] dark:border-gray-600 bg-slate-50 dark:bg-gray-800 p-4 flex-col transition-colors duration-300">
+                        <div class="feature-icon text-[#0d141c] dark:text-white transition-colors duration-300" data-icon="GameController" data-size="24px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M176,112H152a8,8,0,0,1,0-16h24a8,8,0,0,1,0,16Zm-24,16a8,8,0,0,0-8,8v16a8,8,0,0,0,16,0V136A8,8,0,0,0,152,128ZM104,96H88V80a8,8,0,0,0-16,0V96H56a8,8,0,0,0,0,16H72v16a8,8,0,0,0,16,0V112h16a8,8,0,0,0,0-16ZM239.15,198.44,226.89,118a16,16,0,0,0-31.18,0l-12.26,80.44-22.25,0,12.26-80.44a16,16,0,0,0-31.18,0L130.22,198.44H104a16,16,0,0,1-15.79-18.44l8-80a16,16,0,0,1,31.58,0l8,80A16,16,0,0,1,120,198.44H104v16h26.22l12.26-80.44a16,16,0,0,1,31.18,0l12.26,80.44H208a8,8,0,0,1,0,16H181.78l-12.26-80.44a16,16,0,0,0-31.18,0L126.08,214.44H104a32,32,0,0,0,31.22-39.55l-7.71-77.11a32,32,0,0,0-63,0l-7.71,77.11A32,32,0,0,0,88,214.44H239.15Z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <h2 class="feature-title text-[#0d141c] dark:text-white text-base font-bold leading-tight transition-colors duration-300">Fun & Games</h2>
+                            <p class="text-[#49739c] dark:text-gray-400 text-sm font-normal leading-normal transition-colors duration-300">Engage your community with interactive games and entertainment features.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card flex flex-1 gap-3 rounded-lg border border-[#cedbe8] dark:border-gray-600 bg-slate-50 dark:bg-gray-800 p-4 flex-col transition-colors duration-300">
+                        <div class="feature-icon text-[#0d141c] dark:text-white transition-colors duration-300" data-icon="CurrencyDollar" data-size="24px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M152,120H136V56h8a32,32,0,0,1,32,32,8,8,0,0,0,16,0,48.05,48.05,0,0,0-48-48h-8V24a8,8,0,0,0-16,0V40h-8a48,48,0,0,0,0,96h8v64H104a32,32,0,0,1-32-32,8,8,0,0,0-16,0,48.05,48.05,0,0,0,48,48h16v16a8,8,0,0,0,16,0V216h8a48,48,0,0,0,0-96ZM112,120a32,32,0,0,1,0-64h8v64Zm32,80V136h8a32,32,0,0,1,0,64Z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <h2 class="feature-title text-[#0d141c] dark:text-white text-base font-bold leading-tight transition-colors duration-300">Economy System</h2>
+                            <p class="text-[#49739c] dark:text-gray-400 text-sm font-normal leading-normal transition-colors duration-300">Build an engaging economy with currency, shops, and rewards.</p>
+                        </div>
+                    </div>
+                    <div class="feature-card flex flex-1 gap-3 rounded-lg border border-[#cedbe8] dark:border-gray-600 bg-slate-50 dark:bg-gray-800 p-4 flex-col transition-colors duration-300">
+                        <div class="feature-icon text-[#0d141c] dark:text-white transition-colors duration-300" data-icon="Gear" data-size="24px" data-weight="regular">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm109.94-52.79a8,8,0,0,0-3.89-5.4l-29.83-17-.12-33.62a8,8,0,0,0-2.83-6.08,111.91,111.91,0,0,0-36.72-20.67,8,8,0,0,0-6.46.59L128,41.85,97.91,25a8,8,0,0,0-6.46-.59A111.91,111.91,0,0,0,54.73,45.11a8,8,0,0,0-2.83,6.08L51.78,85.21l-29.83,17a8,8,0,0,0-3.89,5.4,112.1,112.1,0,0,0,0,41.56,8,8,0,0,0,3.89,5.4l29.83,17,.12,33.62a8,8,0,0,0,2.83,6.08,111.91,111.91,0,0,0,36.72,20.67,8,8,0,0,0,6.46-.59L128,214.15,158.09,231a7.91,7.91,0,0,0,3.9,1,8.09,8.09,0,0,0,2.56-.42,111.91,111.91,0,0,0,36.72-20.67,8,8,0,0,0,2.83-6.08l.12-33.62,29.83-17a8,8,0,0,0,3.89-5.4A112.1,112.1,0,0,0,237.94,107.21Zm-15.13,29.89-25.6,14.59a7.93,7.93,0,0,0-3.89,5.4l-.12,28.87a95.9,95.9,0,0,1-25.37,14.3L140.76,185a8,8,0,0,0-6.75.43l-26,14.93-26-14.93a8,8,0,0,0-6.75-.43l-27.07,15.27a95.9,95.9,0,0,1-25.37-14.3L48.7,157.09a7.93,7.93,0,0,0-3.89-5.4L19.21,137.1a96.1,96.1,0,0,1,0-18.2l25.6-14.59a7.93,7.93,0,0,0,3.89-5.4l.12-28.87A95.9,95.9,0,0,1,74.19,55.74L101.26,71a8,8,0,0,0,6.75-.43l26-14.93,26,14.93a8,8,0,0,0,6.75.43l27.07-15.27a95.9,95.9,0,0,1,25.37,14.3l.12,28.87a7.93,7.93,0,0,0,3.89,5.4l25.6,14.59A96.1,96.1,0,0,1,222.81,137.1Z"></path>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <h2 class="feature-title text-[#0d141c] dark:text-white text-base font-bold leading-tight transition-colors duration-300">Customization</h2>
+                            <p class="text-[#49739c] dark:text-gray-400 text-sm font-normal leading-normal transition-colors duration-300">Tailor BronxBot to your server's unique needs with customizable settings.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Section -->
+            <div class="@container">
+                <div class="flex flex-col justify-end gap-6 px-4 py-10 @[480px]:gap-8 @[480px]:px-10 @[480px]:py-20">
+                    <div class="flex flex-col gap-2 text-center items-center">
+                        <h1 class="text-[#0d141c] dark:text-white tracking-light text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px] transition-colors duration-300">
+                            Ready to Elevate Your Server?
+                        </h1>
+                        <p class="text-[#0d141c] dark:text-gray-300 text-base font-normal leading-normal max-w-[720px] transition-colors duration-300">
+                            Join tons of servers already benefiting from BronxBot's features. Invite the bot today and experience the difference.
+                        </p>
+                    </div>
+                    <div class="flex flex-1 justify-center">
+                        <div class="flex flex-col gap-3 @[480px]:flex-row">
+                            <a href="/invite"
+                               class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#0c7ff2] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] grow">
+                                <span class="truncate">Invite BronxBot</span>
+                            </a>
+                            <a href="/login"
+                               class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#e7edf4] dark:bg-gray-700 text-[#0d141c] dark:text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base @[480px]:font-bold @[480px]:leading-normal @[480px]:tracking-[0.015em] transition-colors duration-300">
+                                <span class="truncate">Get Started</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="flex justify-center">
+                <div class="flex max-w-[960px] flex-1 flex-col">
+                    <footer class="flex flex-col gap-6 px-5 py-10 text-center @container">
+                        <div class="flex flex-wrap items-center justify-center gap-6 @[480px]:flex-row @[480px]:justify-center">
+                            <a href="https://discord.gg/jENm4phpgv">
+                                <div class="text-[#49739c] dark:text-gray-400 transition-colors duration-300" data-icon="DiscordLogo" data-size="24px" data-weight="regular">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M104,140a12,12,0,1,1-12-12A12,12,0,0,1,104,140Zm60-12a12,12,0,1,0,12,12A12,12,0,0,0,164,128Zm74.45,64.9-67,29.71a16.17,16.17,0,0,1-21.71-9.1l-8.11-22q-6.72.45-13.63.46t-13.63-.46l-8.11,22a16.18,16.18,0,0,1-21.71,9.1l-67-29.71a15.93,15.93,0,0,1-9.06-18.51L38,58A16.07,16.07,0,0,1,48,42.73c21.81-10.64,50.17-17.76,80-17.73s58.2,7.09,80,17.73A16.07,16.07,0,0,1,218,58l29.53,117.38A15.93,15.93,0,0,1,238.45,192.9ZM203.61,62.75c-18.49-9.05-43.34-14.75-75.61-14.75s-57.12,5.7-75.61,14.75L32,178.26l67,29.71,8.11-22c18.12,1.72,37.64,1.72,55.76,0l8.11,22,67-29.71Z"></path>
+                                    </svg>
+                                </div>
+                            </a>
+                            <a href="https://github.com/BronxBot/Dashboard">
+                                <div class="text-[#49739c] dark:text-gray-400 transition-colors duration-300" data-icon="GithubLogo" data-size="24px" data-weight="regular">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M208.31,75.68A59.78,59.78,0,0,0,202.93,28,8,8,0,0,0,196,24a59.75,59.75,0,0,0-48,24H124A59.75,59.75,0,0,0,76,24a8,8,0,0,0-6.93,4,59.78,59.78,0,0,0-5.38,47.68A58.14,58.14,0,0,0,56,104v8a56.06,56.06,0,0,0,48.44,55.47A39.8,39.8,0,0,0,96,192v8H72a24,24,0,0,1-24-24A40,40,0,0,0,8,136a8,8,0,0,0,0,16,24,24,0,0,1,24,24,40,40,0,0,0,40,40H96v16a8,8,0,0,0,16,0V192a24,24,0,0,1,48,0v40a8,8,0,0,0,16,0V192a39.8,39.8,0,0,0-8.44-24.53A56.06,56.06,0,0,0,216,112v-8A58.14,58.14,0,0,0,208.31,75.68ZM200,112a40,40,0,0,1-40,40H112a40,40,0,0,1-40-40v-8a41.74,41.74,0,0,1,6.9-22.48A8,8,0,0,0,80,73.83a43.81,43.81,0,0,1,.79-33.58,43.88,43.88,0,0,1,32.32,20.06A8,8,0,0,0,119.82,64h32.35a8,8,0,0,0,6.74-3.69,43.87,43.87,0,0,1,32.32-20.06A43.81,43.81,0,0,1,192,73.83a8.09,8.09,0,0,0,1,7.65A41.72,41.72,0,0,1,200,104Z"></path>
+                                    </svg>
+                                </div>
+                            </a>
+                        </div>
+                        <p class="text-[#49739c] dark:text-gray-400 text-base font-normal leading-normal transition-colors duration-300">© 2024 BronxBot. Made with 💖 for the Discord community.</p>
+                    </footer>
+                </div>
+            </footer>
+        </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Dark/Light mode toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+        const html = document.documentElement;
+        const heroBackground = document.getElementById('hero-background');
+
+        // Load saved theme or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        if (savedTheme === 'dark') {
+            html.classList.add('dark');
+            heroBackground.classList.remove('light-theme');
+            heroBackground.classList.add('dark-theme');
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            
+            if (html.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+                heroBackground.classList.remove('light-theme');
+                heroBackground.classList.add('dark-theme');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            } else {
+                localStorage.setItem('theme', 'light');
+                heroBackground.classList.remove('dark-theme');
+                heroBackground.classList.add('light-theme');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            }
+        });
+
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        }
+
+        // User dropdown functionality
+        const userDropdownToggle = document.getElementById('user-dropdown-toggle');
+        const userDropdownMenu = document.getElementById('user-dropdown-menu');
+
+        if (userDropdownToggle && userDropdownMenu) {
+            userDropdownToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdownMenu.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!userDropdownToggle.contains(e.target) && !userDropdownMenu.contains(e.target)) {
+                    userDropdownMenu.classList.remove('show');
+                }
+            });
+        }
+
+        // Hero background cursor tracking
+        const hero = document.getElementById('hero-background');
+        const cursorOverlay = document.getElementById('cursor-overlay');
+
+        if (hero && cursorOverlay) {
+            hero.addEventListener('mousemove', (e) => {
+                const rect = hero.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                
+                cursorOverlay.style.setProperty('--mouse-x', x + '%');
+                cursorOverlay.style.setProperty('--mouse-y', y + '%');
+                
+                // Update background position slightly for parallax effect
+                hero.style.backgroundPosition = `${50 + (x - 50) * 0.1}% ${50 + (y - 50) * 0.1}%`;
+            });
+
+            hero.addEventListener('mouseleave', () => {
+                hero.style.backgroundPosition = 'center center';
+            });
+        }
+    </script>
+
 </body>
 </html>

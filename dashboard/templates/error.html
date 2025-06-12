@@ -1,43 +1,104 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - BronxBot</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+        rel="stylesheet"
+        as="style"
+        onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
     
-    <!-- Favicon -->
+    <title>Error - BronxBot</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/southbronx.png') }}">
     
-    <!-- Primary Meta Tags -->
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="title" content="Error - BronxBot">
     <meta name="description" content="Oops! Something went wrong with BronxBot, your Discord server's best friend for moderation, fun, and community management.">
-    
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:title" content="Error - BronxBot">
     <meta property="og:description" content="Oops! Something went wrong with BronxBot, your Discord server's best friend for moderation, fun, and community management.">
     <meta property="og:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.url }}">
-    <meta property="twitter:title" content="Error - BronxBot">
-    <meta property="twitter:description" content="Oops! Something went wrong with BronxBot, your Discord server's best friend for moderation, fun, and community management.">
-    <meta property="twitter:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
     <meta name="theme-color" content="#5865F2">
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 </head>
 <body>
-    <div class="error-container">
-        <h1>Oops! Something went wrong</h1>
-        {% if error %}
-            <p class="error-message">{{ error }}</p>
-        {% else %}
-            <p class="error-message">An unexpected error occurred. Please try again later.</p>
-        {% endif %}
-        <a href="{{ url_for('home') }}" class="button">Return Home</a>
+    <div class="relative flex size-full min-h-screen flex-col bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;'>
+        <div class="layout-container flex h-full grow flex-col">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-white/10 px-10 py-3 backdrop-blur-sm">
+                <div class="flex items-center gap-4 text-white">
+                    <div class="size-4">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
+                                fill="currentColor"
+                            ></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
+                </div>
+                <div class="flex flex-1 justify-end gap-8">
+                    <div class="flex gap-2">
+                        <a href="/"
+                           class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-white/10 backdrop-blur-sm text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-white/20 transition-colors">
+                            <span class="truncate">Home</span>
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Error Section -->
+            <div class="flex flex-1 items-center justify-center px-10 py-20">
+                <div class="max-w-2xl text-center">
+                    <!-- Error Icon -->
+                    <div class="mb-8">
+                        <div class="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px" fill="#ef4444" viewBox="0 0 256 256">
+                                <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM116,136V120a12,12,0,0,1,24,0v16a12,12,0,0,1-24,0Zm28,40a16,16,0,1,1-16-16A16,16,0,0,1,144,176Z"></path>
+                            </svg>
+                        </div>
+                        <h1 class="text-4xl font-bold text-white mb-4">
+                            Oops! Something went wrong
+                        </h1>
+                        <div class="text-lg text-white/80 mb-8">
+                            {% if error %}
+                                <p class="text-red-400">{{ error }}</p>
+                            {% else %}
+                                <p>An unexpected error occurred. Please try again later.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                        <a href="/"
+                           class="inline-flex items-center px-8 py-4 bg-[#0c7ff2] text-white font-bold rounded-full text-lg hover:bg-[#0a6ad1] transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            Return Home
+                        </a>
+                        <a href="javascript:history.back()"
+                           class="inline-flex items-center px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-bold rounded-full text-lg hover:bg-white/20 transition-all border border-white/30">
+                            Go Back
+                        </a>
+                    </div>
+
+                    <!-- Support Link -->
+                    <div class="mt-8">
+                        <p class="text-white/60 text-sm mb-4">Need help? Contact our support team:</p>
+                        <a href="https://discord.gg/jENm4phpgv" target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-2 text-[#0c7ff2] hover:text-white transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M104,140a12,12,0,1,1-12-12A12,12,0,0,1,104,140Zm60-12a12,12,0,1,0,12,12A12,12,0,0,0,164,128Zm74.45,64.9-67,29.71a16.17,16.17,0,0,1-21.71-9.1l-8.11-22q-6.72.45-13.63.46t-13.63-.46l-8.11,22a16.18,16.18,0,0,1-21.71,9.1l-67-29.71a15.93,15.93,0,0,1-9.06-18.51L38,58A16.07,16.07,0,0,1,48,42.73c21.81-10.64,50.17-17.76,80-17.73s58.2,7.09,80,17.73A16.07,16.07,0,0,1,218,58l29.53,117.38A15.93,15.93,0,0,1,238.45,192.9Z"></path>
+                            </svg>
+                            Join Discord Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>

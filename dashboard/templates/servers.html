@@ -1,117 +1,276 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="transition-colors duration-300">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Servers - BronxBot</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+        rel="stylesheet"
+        as="style"
+        onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
     
-    <!-- Favicon -->
+    <title>My Servers - BronxBot</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/southbronx.png') }}">
     
-    <!-- Primary Meta Tags -->
-    <meta name="title" content="BronxBot - Server Management">
-    <meta name="description" content="Manage your Discord servers with BronxBot. Configure settings, view server statistics, and optimize your server experience all in one place.">
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manage your Discord servers with BronxBot. View and configure all servers where you have administrative access.">
     
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:title" content="BronxBot - Server Management">
-    <meta property="og:description" content="Manage your Discord servers with BronxBot. Configure settings, view server statistics, and optimize your server experience all in one place.">
-    <meta property="og:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-    <meta name="theme-color" content="#5865F2">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.url }}">
-    <meta property="twitter:title" content="BronxBot - Server Management">
-    <meta property="twitter:description" content="Manage your Discord servers with BronxBot. Configure settings, view server statistics, and optimize your server experience all in one place.">
-    <meta property="twitter:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        @keyframes spin360 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-360:hover {
+            animation: spin360 0.6s ease-in-out;
+        }
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar" aria-label="Main navigation">
-        <div class="nav-content">
-            <button id="nav-toggle" class="nav-toggle" aria-label="Toggle navigation menu" aria-controls="main-nav" aria-expanded="false">
-                <i class="fas fa-bars"></i>
-            </button>
-            <a href="/" class="nav-brand" aria-label="BronxBot home">BronxBot</a>
-            <div class="nav-links collapsible" id="main-nav">
-                <a href="/" class="nav-link">Dashboard</a>
-                <a href="/settings" class="nav-link">Settings</a>
-                <a href="/servers" class="nav-link active" aria-current="page">Servers</a>
-                <a href="/logout" class="nav-link">Logout</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <main class="main-content centered" aria-labelledby="your-servers-title">
-            <section class="server-select">
-                <h1 id="your-servers-title">Your Servers</h1>
-                <p>Manage bot settings for your Discord servers</p>
-                {% if guilds|length == 0 %}
-                    <div class="empty-state">
-                        <p>No servers found. Try refreshing or inviting BronxBot to your Discord servers!</p>
+    <div class="relative flex size-full min-h-screen flex-col bg-slate-50 dark:bg-gray-900 group/design-root overflow-x-hidden transition-colors duration-300" style='font-family: Inter, "Noto Sans", sans-serif;'>
+        <div class="layout-container flex h-full grow flex-col">
+            <!-- Consistent Header -->
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf4] dark:border-b-gray-700 px-4 md:px-10 py-3 bg-white dark:bg-gray-800 transition-colors duration-300">
+                <div class="flex items-center gap-4 text-[#0d141c] dark:text-white">
+                    <!-- Dark/Light Mode Toggle -->
+                    <button id="theme-toggle" class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out transform hover:scale-105">
+                        <!-- Sun Icon (Light Mode) -->
+                        <svg id="sun-icon" class="w-5 h-5 text-yellow-500 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                        </svg>
+                        <!-- Moon Icon (Dark Mode) -->
+                        <svg id="moon-icon" class="w-5 h-5 text-gray-300 transition-all duration-300 hidden" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 716.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                        </svg>
+                    </button>
+                    <div class="w-6 h-6">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-500">
+                            <path
+                                d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
+                                fill="currentColor"
+                            ></path>
+                        </svg>
                     </div>
-                {% else %}
-                    <div class="server-grid" role="list">
-                        {% for guild in guilds %}
-                            {% if guild.bot_present %}
-                                <a href="{{ '/servers/' + guild.id + '/settings' }}" class="server-card active" role="listitem" aria-label="Settings for {{ guild.name|e }}">
-                                    <div class="server-icon">
-                                        {% if guild.icon_url %}
-                                            <img src="{{ guild.icon_url|e }}" alt="{{ guild.name|e }} server icon" loading="lazy">
-                                        {% else %}
-                                            <i class="fas fa-server" aria-hidden="true"></i>
-                                        {% endif %}
-                                    </div>
-                                    <div class="server-info">
-                                        <h3>{{ guild.name|e }}</h3>
-                                        <div class="server-actions">
-                                            <span class="server-status active" title="Bot is active in this server">
-                                                <i class="fas fa-check" aria-hidden="true"></i> Bot Active
-                                            </span>
-                                            <span class="settings-hint" title="Configure server settings">
-                                                <i class="fas fa-cog" aria-hidden="true"></i> Configure Settings
-                                            </span>
-                                        </div>
-                                    </div>
+                    <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
+                </div>
+
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex flex-1 justify-end gap-8">
+                    <div class="flex items-center gap-9">
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/">Dashboard</a>
+                        <a class="text-[#0c7ff2] dark:text-blue-400 text-sm font-medium leading-normal px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30" href="/servers">Servers</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/faq">FAQ</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
+                    </div>
+                    
+                    <!-- User Avatar Dropdown -->
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center gap-2 spin-360 focus:outline-none">
+                            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-transparent hover:border-blue-400 transition-all duration-300" 
+                                 style='background-image: url("https://cdn.discordapp.com/avatars/{{ request.cookies.get("user_id") }}/{{ request.cookies.get("avatar_hash", "default") }}.png?size=64");'
+                                 title="{{ request.cookies.get('username', 'User') }}">
+                            </div>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                            <div class="py-2">
+                                <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Admin Panel</p>
+                                </div>
+                                {% if request.cookies.get('user_id') %}
+                                <a href="/" class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M104,40H152a8,8,0,0,1,0,16H104a8,8,0,0,1,0-16ZM224,48V64a8,8,0,0,1-16,0V56H48v8a8,8,0,0,1-16,0V48A16,16,0,0,1,48,32H208A16,16,0,0,1,224,48ZM216,88v88a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V88A8,8,0,0,1,48,80H208A8,8,0,0,1,216,88Z"></path>
+                                    </svg>
+                                    Admin Dashboard
                                 </a>
-                            {% else %}
-                                <div class="server-card disabled" role="listitem" aria-label="Bot not added to {{ guild.name|e }}">
-                                    <div class="server-icon">
+                                {% endif %}
+                                <a href="/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.12-3.12L186-119.55a8,8,0,0,0-3.93-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40q-2.16-.06-4.32,0L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3.12,3.12L40.45,70.05a8,8,0,0,0-6,3.93,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84q-.06,2.16,0,4.32L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.48,1.56,3.12,3.12L70,215.55a8,8,0,0,0,3.93,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.12-3.12L215.55,186a8,8,0,0,0,6-3.93,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,208A80,80,0,1,1,208,128,80.09,80.09,0,0,1,128,208Z"></path>
+                                    </svg>
+                                    Settings
+                                </a>
+                                <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H48V208h56A8,8,0,0,1,112,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L188.69,112H112a8,8,0,0,0,0,16h76.69l-18.35,18.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,221.66,122.34Z"></path>
+                                    </svg>
+                                    Log Out
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Main Content -->
+            <div class="flex-1 px-4 md:px-10 py-8">
+                <div class="max-w-6xl mx-auto">
+                    <!-- Page Header -->
+                    <div class="mb-8">
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">My Servers</h1>
+                        <p class="text-gray-600 dark:text-gray-400">Manage BronxBot settings for your Discord servers</p>
+                    </div>
+
+                    <!-- Server Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {% if guilds %}
+                            {% for guild in guilds %}
+                            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                                <div class="flex items-start gap-4 mb-4">
+                                    <div class="w-16 h-16 flex-shrink-0 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                                         {% if guild.icon_url %}
-                                            <img src="{{ guild.icon_url|e }}" alt="{{ guild.name|e }} server icon" loading="lazy">
+                                            <img src="{{ guild.icon_url }}" alt="{{ guild.name }}" class="w-full h-full object-cover">
                                         {% else %}
-                                            <i class="fas fa-server" aria-hidden="true"></i>
+                                            <div class="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+                                                {{ guild.name[0] if guild.name else 'S' }}
+                                            </div>
                                         {% endif %}
                                     </div>
-                                    <div class="server-info">
-                                        <h3>{{ guild.name|e }}</h3>
-                                        <div class="server-actions">
-                                            <span class="server-status inactive" title="Bot is not present in this server">
-                                                <i class="fas fa-times" aria-hidden="true"></i> Bot Not Added
-                                            </span>
-                                            <a href="https://discord.com/api/oauth2/authorize?client_id={{ config.CLIENT_ID }}&permissions=8&scope=bot%20applications.commands&guild_id={{ guild.id }}" 
-                                               class="add-bot-link"
-                                               target="_blank"
-                                               rel="noopener"
-                                               title="Invite BronxBot to this server">
-                                                <i class="fas fa-plus" aria-hidden="true"></i> Add Bot
-                                            </a>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white break-words leading-tight" title="{{ guild.name }}">{{ guild.name }}</h3>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            {% if guild.bot_present %}
+                                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                                <span class="text-green-600 dark:text-green-400 text-sm font-medium">Bot Active</span>
+                                            {% else %}
+                                                <div class="w-2 h-2 bg-red-400 rounded-full"></div>
+                                                <span class="text-red-600 dark:text-red-400 text-sm font-medium">Bot Not Added</span>
+                                            {% endif %}
                                         </div>
                                     </div>
                                 </div>
-                            {% endif %}
-                        {% endfor %}
+                                
+                                <div class="space-y-3">
+                                    {% if guild.bot_present %}
+                                        <a href="/servers/{{ guild.id }}/settings" 
+                                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="mr-2" viewBox="0 0 256 256">
+                                                <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.12-3.12L186-99.46a8,8,0,0,0-3.93-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40q-2.16-.06-4.32,0L107.2,25.11a8,8,0,0,0-7.06-1.49A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.48-3.12,3.12L40.54,70.05a8,8,0,0,0-6,3.93,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84q-.06,2.16,0,4.32L25.11,148.8a8,8,0,0,0-1.49,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64c1,1.08,2,2.15,3.12,3.12l2.64,23.72a8,8,0,0,0,3.93,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.49,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.12-3.12L215.46,186a8,8,0,0,0,6-3.93,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,192a64,64,0,1,1,64-64A64.07,64.07,0,0,1,128,192Z"></path>
+                                            </svg>
+                                            Manage Settings
+                                        </a>
+                                        <div class="grid grid-cols-2 gap-2">
+                                            <div class="text-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                                <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ guild.member_count or 'N/A' }}</div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">Members</div>
+                                            </div>
+                                            <div class="text-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                                <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ guild.commands_today or '0' }}</div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">Commands</div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                                            <p class="text-yellow-800 dark:text-yellow-200 text-sm text-center mb-3">
+                                                BronxBot is not in this server yet
+                                            </p>
+                                            <a href="https://discord.com/api/oauth2/authorize?client_id={{ config.CLIENT_ID }}&permissions=8&scope=bot%20applications.commands&guild_id={{ guild.id }}" 
+                                               target="_blank"
+                                               class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="mr-2" viewBox="0 0 256 256">
+                                                    <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path>
+                                                </svg>
+                                                Add Bot to Server
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <!-- No servers state -->
+                            <div class="col-span-full flex flex-col items-center justify-center py-16">
+                                <div class="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="text-gray-400 dark:text-gray-600" viewBox="0 0 256 256">
+                                        <path d="M176,24H80A16,16,0,0,0,64,40V216a8,8,0,0,0,11.58,7.16L128,200l52.42,23.16A8,8,0,0,0,192,216V40A16,16,0,0,0,176,24Z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Servers Found</h3>
+                                <p class="text-gray-600 dark:text-gray-400 text-center mb-6 max-w-md">
+                                    You don't have administrative access to any Discord servers, or BronxBot hasn't been added to them yet.
+                                </p>
+                                <a href="https://discord.com/api/oauth2/authorize?client_id={{ config.CLIENT_ID }}&permissions=8&scope=bot%20applications.commands" 
+                                   target="_blank"
+                                   class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="mr-2" viewBox="0 0 256 256">
+                                        <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path>
+                                    </svg>
+                                    Add BronxBot to Server
+                                </a>
+                            </div>
+                        {% endif %}
                     </div>
-                {% endif %}
-            </section>
-        </main>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Dark mode toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+
+        // Check for saved theme preference or default to light mode
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.classList.add(currentTheme);
+        
+        if (currentTheme === 'dark') {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // User dropdown functionality
+        const dropdownToggle = document.getElementById('user-dropdown-toggle');
+        const dropdownMenu = document.getElementById('user-dropdown-menu');
+
+        dropdownToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+    </script>
 </body>
 </html>

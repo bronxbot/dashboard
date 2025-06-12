@@ -1,174 +1,443 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="transition-colors duration-300">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BronxBot Dashboard</title>
-    
-    <!-- Favicon -->
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
+
+    <title>BronxBot Admin Panel</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/southbronx.png') }}">
     
-    <!-- Primary Meta Tags -->
-    <meta name="title" content="BronxBot - Discord Bot Dashboard">
-    <meta name="description" content="BronxBot is a versatile Discord bot featuring moderation, fun commands, giveaways, and server management tools. Manage your Discord server with ease!">
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="BronxBot Admin Panel - Monitor your Discord bot's performance, command usage, and server statistics in real-time.">
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:title" content="BronxBot - Discord Bot Dashboard">
-    <meta property="og:description" content="BronxBot is a versatile Discord bot featuring moderation, fun commands, giveaways, and server management tools. Manage your Discord server with ease!">
-    <meta property="og:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.url }}">
-    <meta property="twitter:title" content="BronxBot - Discord Bot Dashboard">
-    <meta property="twitter:description" content="BronxBot is a versatile Discord bot featuring moderation, fun commands, giveaways, and server management tools. Manage your Discord server with ease!">
-    <meta property="twitter:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-    <meta name="theme-color" content="#5865F2">
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Avatar dropdown styles */
+        .dropdown-menu {
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Spinning avatar animation */
+        .spin-360 {
+            transition: transform 0.6s ease-in-out;
+        }
+        
+        .spin-360:hover {
+            transform: rotate(360deg);
+        }
+        
+        /* Enhanced chart styling */
+        .chart-container {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark .chart-container {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.1) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Stat card animations */
+        .stat-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+        }
+        
+        .dark .stat-card:hover {
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-content">
-            <button id="nav-toggle" class="nav-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <a href="/" class="nav-brand">BronxBot</a>
-            <div class="nav-links collapsible">
-                <a href="/" class="nav-link active">Dashboard</a>
-                <a href="/settings" class="nav-link">Settings</a>
-                <a href="/servers" class="nav-link">Servers</a>
-                <a href="/logout" class="nav-link">Logout</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <aside class="sidebar">
-            <div class="sidebar-menu">
-                <a href="/" class="sidebar-item active">
-                    <i class="fas fa-home"></i>
-                    <span>Overview</span>
-                </a>
-                <a href="/settings" class="sidebar-item">
-                    <i class="fas fa-cog"></i>
-                    <span>Settings</span>
-                </a>
-                <a href="/servers" class="sidebar-item">
-                    <i class="fas fa-server"></i>
-                    <span>Servers</span>
-                </a>
-                <a href="/stats" class="sidebar-item">
-                    <i class="fas fa-chart-bar"></i>
-                    <span>Statistics</span>
-                </a>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <section class="hero">
-                <h1>Welcome back, {{ username }}! 👋</h1>
-                <p>Here's your bot's current status and statistics</p>
-            </section>
-                <div class="shard-status">
-                    <h2>🔋 Shard Status</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <h3>Total Servers</h3>
-                            <p>{{ stats.server_count|default(0)|thousands }}</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Total Users</h3>
-                            <p>{{ stats.user_count|default(0)|thousands }}</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Latency</h3>
-                            <p>{{ "%.1f"|format(stats.latency|default(0)) }}ms</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>Shards</h3>
-                            <p>{{ stats.shards|default(2) }}</p>
-                        </div>
+    <div class="relative flex size-full min-h-screen flex-col bg-slate-50 dark:bg-gray-900 group/design-root overflow-x-hidden transition-colors duration-300" style='font-family: Inter, "Noto Sans", sans-serif;'>
+        <div class="layout-container flex h-full grow flex-col">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf4] dark:border-b-gray-700 px-4 md:px-10 py-3 bg-white dark:bg-gray-800 transition-colors duration-300">
+                <div class="flex items-center gap-4 text-[#0d141c] dark:text-white">
+                    <!-- Dark/Light Mode Toggle -->
+                    <button id="theme-toggle" class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out transform hover:scale-105">
+                        <!-- Sun Icon (Light Mode) -->
+                        <svg id="sun-icon" class="w-5 h-5 text-yellow-500 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                        </svg>
+                        <!-- Moon Icon (Dark Mode) -->
+                        <svg id="moon-icon" class="w-5 h-5 text-gray-300 transition-all duration-300 hidden" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                        </svg>
+                    </button>
+                    <div class="w-6 h-6">
+                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-500">
+                            <path
+                                d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
+                                fill="currentColor"
+                            ></path>
+                        </svg>
                     </div>
-
-                    {% if stats.shard_stats %}
-                    <div class="shard-grid">
-                        {% for shard_id, shard in stats.shard_stats.items() %}
-                        <div class="shard-card {{ 'online' if shard.status == 'online' else 'offline' }}">
-                            <h4>
-                                {% if shard.status == 'online' %}🟢{% else %}🔴{% endif %}
-                                Shard {{ shard_id }}
-                            </h4>
-                            <p>Servers: {{ shard.guild_count }}</p>
-                            <p>Users: {{ shard.user_count }}</p>
-                            <p>Latency: {{ "%.1f"|format(shard.latency) }}ms</p>
-                            <p class="uptime">
-                                Online for: {{ shard.uptime }}
-                            </p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+                    <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                 </div>
-        </main>
+
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex flex-1 justify-end gap-8">
+                    <div class="flex items-center gap-9">
+                        <a class="text-[#0c7ff2] dark:text-blue-400 text-sm font-medium leading-normal px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30" href="/">Dashboard</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/servers">Servers</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/faq">FAQ</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
+                    </div>
+                    
+                    <!-- User Avatar Dropdown -->
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center gap-2 spin-360 focus:outline-none">
+                            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-transparent hover:border-blue-400 transition-all duration-300" 
+                                 style='background-image: url("https://cdn.discordapp.com/avatars/{{ request.cookies.get("user_id") }}/{{ request.cookies.get("avatar_hash", "default") }}.png?size=64");'
+                                 title="{{ request.cookies.get('username', 'User') }}">
+                            </div>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                            <div class="py-2">
+                                <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Admin Panel</p>
+                                </div>
+                                {% if request.cookies.get('user_id') %}
+                                <a href="/" class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M104,40H152a8,8,0,0,1,0,16H104a8,8,0,0,1,0-16ZM224,48V64a8,8,0,0,1-16,0V56H48v8a8,8,0,0,1-16,0V48A16,16,0,0,1,48,32H208A16,16,0,0,1,224,48ZM216,88v88a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V88A8,8,0,0,1,48,80H208A8,8,0,0,1,216,88Z"></path>
+                                    </svg>
+                                    Admin Dashboard
+                                </a>
+                                {% endif %}
+                                <a href="/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.12-3.12L186-119.55a8,8,0,0,0-3.93-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40q-2.16-.06-4.32,0L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3.12,3.12L40.45,70.05a8,8,0,0,0-6,3.93,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84q-.06,2.16,0,4.32L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.48,1.56,3.12,3.12L70,215.55a8,8,0,0,0,3.93,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.12-3.12L215.55,186a8,8,0,0,0,6-3.93,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,208A80,80,0,1,1,208,128,80.09,80.09,0,0,1,128,208Z"></path>
+                                    </svg>
+                                    Settings
+                                </a>
+                                <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H48V208h56A8,8,0,0,1,112,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L188.69,112H112a8,8,0,0,0,0,16h76.69l-18.35,18.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,221.66,122.34Z"></path>
+                                    </svg>
+                                    Log Out
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+        <div class="px-40 flex flex-1 justify-center py-5">
+          <div class="layout-content-container flex flex-col max-w-[960px] flex-1">
+            <div class="flex flex-wrap justify-between gap-3 p-4">
+              <div class="flex min-w-72 flex-col gap-3">
+                <p class="text-[#06b6d4] dark:text-cyan-400 tracking-light text-[32px] font-bold leading-tight">Admin Panel</p>
+                <p class="text-[#5c748a] dark:text-gray-300 text-sm font-normal leading-normal">Welcome back, {{ request.cookies.get('username', 'User') }}! Here's an overview of your bot's performance and status.</p>
+              </div>
+            </div>
+            <!-- Stats Cards -->
+            <div class="flex flex-wrap gap-4 p-4">
+                <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">Uptime</p>
+                    <p id="uptime-display" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight">{{ stats.uptime.days }}d {{ stats.uptime.hours }}h {{ stats.uptime.minutes }}m</p>
+                </div>
+                <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">Servers Connected</p>
+                    <p id="server-count" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-count="{{ stats.guilds.count }}">{{ stats.guilds.count }}<span class="stats-indicator"></span></p>
+                </div>
+                <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">Total Commands Executed</p>
+                    <p id="total-commands" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-count="{{ stats.commands.total_executed }}">{{ stats.commands.total_executed | thousands }}<span class="stats-indicator"></span></p>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <h2 class="text-[#0d141c] dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">Command Execution Metrics</h2>
+            <div class="flex flex-wrap gap-4 px-4 py-6">
+                <div class="chart-container flex min-w-72 flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">Command Execution Over Time</p>
+                    <p id="weekly-total" class="text-[#0d141c] dark:text-white tracking-light text-[32px] font-bold leading-tight truncate">Loading...</p>
+                    <div class="flex gap-1">
+                        <p class="text-[#5c748a] dark:text-gray-400 text-base font-normal leading-normal">Last 7 Days</p>
+                        <p id="percentage-change" class="text-[#078838] text-base font-medium leading-normal">Loading...</p>
+                    </div>
+                    <div class="flex min-h-[180px] flex-1 flex-col gap-2 py-4">
+                        <!-- Y-axis labels and chart container -->
+                        <div class="flex flex-1">
+                            <!-- Y-axis -->
+                            <div class="flex flex-col justify-between w-10 text-right pr-2 text-xs text-[#5c748a] dark:text-gray-400">
+                      <span id="y-max">300</span>
+                      <span id="y-75">225</span>
+                      <span id="y-50">150</span>
+                      <span id="y-25">75</span>
+                      <span id="y-min">0</span>
+                    </div>
+                    <!-- Chart area -->
+                    <div class="flex-1">
+                      <svg id="command-chart" width="100%" height="148" viewBox="0 0 400 148" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                        <!-- Grid lines -->
+                        <line x1="0" y1="0" x2="400" y2="0" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
+                        <line x1="0" y1="37" x2="400" y2="37" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
+                        <line x1="0" y1="74" x2="400" y2="74" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
+                        <line x1="0" y1="111" x2="400" y2="111" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
+                        <line x1="0" y1="148" x2="400" y2="148" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
+                        
+                        <!-- Data will be inserted here by JavaScript -->
+                        <path id="chart-area" fill="url(#paint0_linear)" />
+                        <path id="chart-line" stroke="#0c7ff2" stroke-width="3" stroke-linecap="round" fill="none" />
+                        
+                        <defs>
+                          <linearGradient id="paint0_linear" x1="200" y1="0" x2="200" y2="148" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#0c7ff2" stop-opacity="0.3"></stop>
+                            <stop offset="1" stop-color="#0c7ff2" stop-opacity="0"></stop>
+                          </linearGradient>
+                        </defs>
+                      </svg>
+                    </div>
+                  </div>
+                  <!-- X-axis labels -->
+                  <div class="flex justify-around text-[#5c748a] dark:text-gray-400 text-[13px] font-bold leading-normal tracking-[0.015em] ml-10">
+                    <span id="day-0">Mon</span>
+                    <span id="day-1">Tue</span>
+                    <span id="day-2">Wed</span>
+                    <span id="day-3">Thu</span>
+                    <span id="day-4">Fri</span>
+                    <span id="day-5">Sat</span>
+                    <span id="day-6">Sun</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        // Live stats updates using Server-Sent Events
-        const evtSource = new EventSource("/api/stats/live");
-        
-        function updateStats(stats) {
-            // Update server and user counts
-            document.querySelector('.stat-card:nth-child(1) p').textContent = stats.server_count || 0;
-            document.querySelector('.stat-card:nth-child(2) p').textContent = stats.user_count || 0;
+        // Dark mode functionality
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             
-            // Update latency
-            document.querySelector('.stat-card:nth-child(4) p').textContent = `${stats.latency || 0}ms`;
-            
-            // Update uptime (let the existing uptime function handle this)
-            const uptimeElement = document.getElementById('uptime');
-            if (uptimeElement) {
-                uptimeElement.setAttribute('data-uptime', stats.uptime || 0);
+            if (savedTheme) {
+                document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+            } else {
+                document.documentElement.classList.toggle('dark', prefersDark);
             }
             
-            // Update shard status if it exists
-            if (stats.shard_stats) {
-                const shardGrid = document.querySelector('.shard-grid');
-                if (shardGrid) {
-                    shardGrid.innerHTML = '';
-                    for (const [shard_id, shard] of Object.entries(stats.shard_stats)) {
-                        const shardCard = document.createElement('div');
-                        shardCard.className = `shard-card ${shard.status === 'online' ? 'online' : 'offline'}`;
-                        shardCard.innerHTML = `
-                            <h4>${shard.status === 'online' ? '🟢' : '🔴'} Shard ${shard_id}</h4>
-                            <p>Servers: ${shard.guild_count}</p>
-                            <p>Users: ${shard.user_count || 0}</p>
-                            <p>Latency: ${shard.latency.toFixed(1)}ms</p>
-                            <p class="uptime">Online for: ${shard.uptime}</p>
-                        `;
-                        shardGrid.appendChild(shardCard);
-                    }
-                }
+            updateThemeIcons();
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcons();
+            updateChartColors(); // Update chart colors when theme changes
+        }
+
+        function updateThemeIcons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const sunIcon = document.getElementById('sun-icon');
+            const moonIcon = document.getElementById('moon-icon');
+            
+            if (sunIcon && moonIcon) {
+                sunIcon.classList.toggle('hidden', isDark);
+                moonIcon.classList.toggle('hidden', !isDark);
             }
         }
 
-        evtSource.onmessage = (event) => {
-            const stats = JSON.parse(event.data);
-            updateStats(stats);
-        };
+        // Avatar dropdown functionality
+        function initDropdown() {
+            const toggle = document.getElementById('user-dropdown-toggle');
+            const menu = document.getElementById('user-dropdown-menu');
+            
+            if (toggle && menu) {
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    menu.classList.toggle('show');
+                });
+                
+                document.addEventListener('click', () => {
+                    menu.classList.remove('show');
+                });
+                
+                menu.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            }
+        }
 
-        evtSource.onerror = (err) => {
-            console.error("SSE Error:", err);
-            evtSource.close();
-            // Try to reconnect after 5 seconds
-            setTimeout(() => {
-                window.location.reload();
-            }, 5000);
-        };
+        // Function to load and display metrics
+      async function loadMetrics() {
+        try {
+          // Load general stats
+          const statsResponse = await fetch('/api/stats');
+          const stats = await statsResponse.json();
+          
+          // Update uptime
+          if (stats.uptime) {
+            document.getElementById('uptime-display').textContent = 
+              `${stats.uptime.days}d ${stats.uptime.hours}h ${stats.uptime.minutes}m`;
+          }
+          
+          // Update server count
+          if (stats.guilds) {
+            document.getElementById('server-count').textContent = stats.guilds.count;
+          }
+          
+          // Update total commands
+          if (stats.commands) {
+            const totalCommands = stats.commands.total_executed.toLocaleString();
+            document.getElementById('total-commands').textContent = totalCommands;
+          }
+          
+          // Load command metrics for chart
+          const metricsResponse = await fetch('/api/metrics/commands');
+          const metrics = await metricsResponse.json();
+          
+          // Update weekly total and percentage
+          document.getElementById('weekly-total').textContent = metrics.total_last_7_days.toLocaleString();
+          const changeColor = metrics.percentage_change >= 0 ? '#078838' : '#dc2626';
+          const changePrefix = metrics.percentage_change >= 0 ? '+' : '';
+          document.getElementById('percentage-change').innerHTML = 
+            `<span style="color: ${changeColor}">${changePrefix}${metrics.percentage_change}%</span>`;
+          
+          // Update chart with real data
+          updateChart(metrics.daily_data);
+          
+          // Log metrics for debugging
+          console.log('Stats loaded:', stats);
+          console.log('Metrics loaded:', metrics);
+          
+        } catch (error) {
+          console.error('Error loading metrics:', error);
+          // Fallback to default values
+          document.getElementById('weekly-total').textContent = '1,200';
+          document.getElementById('percentage-change').innerHTML = '<span style="color: #078838">+15%</span>';
+        }
+      }
+      
+      // Function to update the chart with real data
+      function updateChart(dailyData) {
+        if (!dailyData || dailyData.length === 0) {
+          console.log('No daily data available');
+          return;
+        }
+        
+        // Calculate max value for Y-axis scaling
+        const maxValue = Math.max(...dailyData.map(d => d.count || 0));
+        const yAxisMax = Math.ceil(maxValue * 1.2 / 50) * 50; // Round up to nearest 50
+        
+        // Update Y-axis labels
+        document.getElementById('y-max').textContent = yAxisMax;
+        document.getElementById('y-75').textContent = Math.round(yAxisMax * 0.75);
+        document.getElementById('y-50').textContent = Math.round(yAxisMax * 0.5);
+        document.getElementById('y-25').textContent = Math.round(yAxisMax * 0.25);
+        document.getElementById('y-min').textContent = '0';
+        
+        // Generate path data for the chart
+        const chartWidth = 400;
+        const chartHeight = 148;
+        const stepWidth = chartWidth / (dailyData.length - 1);
+        
+        let pathData = '';
+        let areaData = '';
+        
+        dailyData.forEach((day, index) => {
+          const x = index * stepWidth;
+          const y = chartHeight - (day.count / yAxisMax * chartHeight);
+          
+          if (index === 0) {
+            pathData += `M${x} ${y}`;
+            areaData += `M${x} ${y}`;
+          } else {
+            pathData += ` L${x} ${y}`;
+            areaData += ` L${x} ${y}`;
+          }
+        });
+        
+        // Complete the area path
+        areaData += ` L${chartWidth} ${chartHeight} L0 ${chartHeight} Z`;
+        
+        // Update the chart elements
+        document.getElementById('chart-line').setAttribute('d', pathData);
+        document.getElementById('chart-area').setAttribute('d', areaData);
+        
+        // Update day labels
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        dailyData.forEach((day, index) => {
+          if (day.date) {
+            const date = new Date(day.date);
+            const dayName = dayNames[date.getDay()];
+            const dayElement = document.getElementById(`day-${index}`);
+            if (dayElement) {
+              dayElement.textContent = dayName;
+            }
+          }
+        });
+        
+        // Update chart colors based on theme
+        updateChartColors();
+      }
+      
+      // Function to update chart colors based on current theme
+      function updateChartColors() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const chartLine = document.getElementById('chart-line');
+        const gradientStops = document.querySelectorAll('#paint0_linear stop');
+        
+        if (isDark) {
+          // Dark mode colors - brighter blue
+          chartLine.setAttribute('stroke', '#60a5fa');
+          gradientStops[0].setAttribute('stop-color', '#60a5fa');
+          gradientStops[1].setAttribute('stop-color', '#60a5fa');
+        } else {
+          // Light mode colors - original blue
+          chartLine.setAttribute('stroke', '#0c7ff2');
+          gradientStops[0].setAttribute('stop-color', '#0c7ff2');
+          gradientStops[1].setAttribute('stop-color', '#0c7ff2');
+        }
+      }
+      
+      // Initialize everything when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+        initTheme();
+        initDropdown();
+        loadMetrics();
+        updateChartColors(); // Initialize chart colors based on current theme
+        
+        // Add theme toggle event listener
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+      });
+      
+      // Refresh metrics every 30 seconds
+      setInterval(loadMetrics, 30000);
     </script>
-</body>
-</html>

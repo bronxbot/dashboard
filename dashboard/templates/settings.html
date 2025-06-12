@@ -1,229 +1,298 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="transition-colors duration-300">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Server Settings - BronxBot</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+        rel="stylesheet"
+        as="style"
+        onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
     
-    <!-- Favicon -->
+    <title>Server Settings - BronxBot</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/southbronx.png') }}">
     
-    <!-- Primary Meta Tags -->
-    <meta name="title" content="BronxBot - Server Settings">
-    <meta name="description" content="Configure your Discord server's settings with BronxBot. Customize welcome messages, moderation tools, prefix settings, and more to create the perfect server environment.">
+    <!-- Meta tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Configure BronxBot settings for your Discord server. Customize moderation, economy, music, and other features.">
     
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:title" content="BronxBot - Server Settings">
-    <meta property="og:description" content="Configure your Discord server's settings with BronxBot. Customize welcome messages, moderation tools, prefix settings, and more to create the perfect server environment.">
-    <meta property="og:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{ request.url }}">
-    <meta property="twitter:title" content="BronxBot - Server Settings">
-    <meta property="twitter:description" content="Configure your Discord server's settings with BronxBot. Customize welcome messages, moderation tools, prefix settings, and more to create the perfect server environment.">
-    <meta property="twitter:image" content="{{ url_for('static', filename='images/southbronx.png', _external=True) }}">
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        @keyframes spin360 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-360:hover {
+            animation: spin360 0.6s ease-in-out;
+        }
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-content">
-            <button id="nav-toggle" class="nav-toggle">
-                <i class="fas fa-bars"></i>
-            </button>
-            <a href="/" class="nav-brand">BronxBot</a>
-            <div class="nav-links collapsible">
-                <a href="/" class="nav-link">Dashboard</a>
-                <a href="/settings" class="nav-link active">Settings</a>
-                <a href="/servers" class="nav-link">Servers</a>
-                <a href="/logout" class="nav-link">Logout</a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        {% if not guild %}
-        <main class="main-content centered">
-            <section class="server-select">
-                <h1>Select a Server</h1>
-                <p>Choose a server to configure BronxBot settings</p>
-                
-                <div class="server-grid">
-                    {% for guild in guilds %}
-                        {% if guild.bot_present %}
-                            <a href="{{ '/servers/' + guild.id + '/settings' }}" class="server-card active">
-                                <div class="server-icon">
-                                    {% if guild.icon_url %}
-                                        <img src="{{ guild.icon_url }}" alt="{{ guild.name }}">
-                                    {% else %}
-                                        <i class="fas fa-server"></i>
-                                    {% endif %}
-                                </div>
-                                <div class="server-info">
-                                    <h3>{{ guild.name }}</h3>
-                                    <div class="server-actions">
-                                        <span class="server-status active">
-                                            <i class="fas fa-check"></i> Bot Active
-                                        </span>
-                                        <span class="settings-hint">
-                                            <i class="fas fa-cog"></i> Configure Settings
-                                        </span>
-                                    </div>
-                                </div>
-                            </a>
-                        {% else %}
-                            <div class="server-card disabled">
-                                <div class="server-icon">
-                                    {% if guild.icon_url %}
-                                        <img src="{{ guild.icon_url }}" alt="{{ guild.name }}">
-                                    {% else %}
-                                        <i class="fas fa-server"></i>
-                                    {% endif %}
-                                </div>
-                                <div class="server-info">
-                                    <h3>{{ guild.name }}</h3>
-                                    <div class="server-actions">
-                                        <span class="server-status inactive">
-                                            <i class="fas fa-times"></i> Bot Not Added
-                                        </span>
-                                        <a href="https://discord.com/api/oauth2/authorize?client_id={{ config.CLIENT_ID }}&permissions=8&scope=bot%20applications.commands&guild_id={{ guild.id }}" 
-                                           class="add-bot-link">
-                                            <i class="fas fa-plus"></i> Add Bot
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+    <div class="relative flex size-full min-h-screen flex-col bg-slate-50 dark:bg-gray-900 group/design-root overflow-x-hidden transition-colors duration-300" style='font-family: Inter, "Noto Sans", sans-serif;'>
+        <div class="layout-container flex h-full grow flex-col">
+            <!-- Consistent Header -->
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf4] dark:border-b-gray-700 px-4 md:px-10 py-3 bg-white dark:bg-gray-800 transition-colors duration-300">
+                <div class="flex items-center gap-4 text-[#0d141c] dark:text-white">
+                    <!-- Dark/Light Mode Toggle -->
+                    <button id="theme-toggle" class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out transform hover:scale-105">
+                        <!-- Sun Icon (Light Mode) -->
+                        <svg id="sun-icon" class="w-5 h-5 text-yellow-500 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                        </svg>
+                        <!-- Moon Icon (Dark Mode) -->
+                        <svg id="moon-icon" class="w-5 h-5 text-gray-300 transition-all duration-300 hidden" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                        </svg>
+                    </button>
+                    <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                 </div>
-            </section>
-        </main>
-        {% else %}
-        <aside class="sidebar">
-            <div class="sidebar-menu">
-                <a href="/" class="sidebar-item">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-                <a href="/login" class="sidebar-item">
-                    <i class="fas fa-sign-in-alt"></i>
-                    <span>Login</span>
-                </a>
-                <a href="/#features" class="sidebar-item">
-                    <i class="fas fa-star"></i>
-                    <span>Features</span>
-                </a>
-                <a href="https://discord.gg/jENm4phpgv" class="sidebar-item">
-                    <i class="fab fa-discord"></i>
-                    <span>Support Server</span>
-                </a>
-                <a href="https://github.com/BronxBot/Dashboard" class="sidebar-item">
-                    <i class="fab fa-github"></i>
-                    <span>Source Code</span>
-                </a>
-                <a href="https://bronxbot.onrender.com/invite" class="sidebar-item">
-                    <i class="fab fa-plus"></i>
-                    <span>Invite The Bot</span>
-                </a>
-            </div>
-        </aside>
 
-        <main class="main-content">
-            <form method="POST" action="/servers/{{ guild.id }}/settings/update">
-                <section id="general">
-                    <h2>General Settings</h2>
-                    <div class="form-group">
-                        <label>Prefixes</label>
-                        <div class="prefix-input-container">
-                            <input type="text" id="newPrefix" placeholder="Add new prefix...">
-                            <div class="prefix-buttons" id="prefixContainer">
-                                {% for prefix in settings.get('prefixes', ['.']) %}
-                                    <button type="button" class="prefix-tag" data-prefix="{{ prefix }}">
-                                        {{ prefix }}
-                                        <span class="remove-prefix">×</span>
-                                    </button>
-                                {% endfor %}
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex flex-1 justify-end gap-8">
+                    <div class="flex items-center gap-9">
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/">Dashboard</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/servers">Servers</a>
+                        <a class="text-[#0c7ff2] dark:text-blue-400 text-sm font-medium leading-normal px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30" href="#">Settings</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
+                    </div>
+                    
+                    <!-- User Avatar Dropdown -->
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center gap-2 spin-360 focus:outline-none">
+                            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-transparent hover:border-blue-400 transition-all duration-300" 
+                                 style='background-image: url("https://cdn.discordapp.com/avatars/{{ request.cookies.get("user_id") }}/{{ request.cookies.get("avatar_hash", "default") }}.png?size=64");'
+                                 title="{{ request.cookies.get('username', 'User') }}">
                             </div>
-                            <input type="hidden" name="prefixes" id="prefixesInput" value="{{ ','.join(settings.get('prefixes', [])) if settings.get('prefixes') else '.' }}">
-                            <small class="prefix-counter">{{ settings.get('prefixes', ['.'])|length }} total prefixes</small>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                            <div class="py-2">
+                                <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Logged in</p>
+                                </div>
+                                <a href="/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06a107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.12-3.12L186-119.55a8,8,0,0,0-3.93-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40q-2.16-.06-4.32,0L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3.12,3.12L40.45,70.05a8,8,0,0,0-6,3.93,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84q-.06,2.16,0,4.32L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.48,1.56,3.12,3.12L70,215.55a8,8,0,0,0,3.93,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.12-3.12L215.55,186a8,8,0,0,0,6-3.93,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,208A80,80,0,1,1,208,128,80.09,80.09,0,0,1,128,208Z"></path>
+                                    </svg>
+                                    Settings
+                                </a>
+                                <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H48V208h56A8,8,0,0,1,112,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L188.69,112H112a8,8,0,0,0,0,16h76.69l-18.35,18.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,221.66,122.34Z"></path>
+                                    </svg>
+                                    Log Out
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </header>
+            
+            <!-- Main Content -->
+            <div class="flex-1 px-4 md:px-10 py-8">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Breadcrumb -->
+                    <nav class="flex mb-8" aria-label="Breadcrumb">
+                        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                            <li class="inline-flex items-center">
+                                <a href="/servers" class="inline-flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">
+                                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                                    </svg>
+                                    Servers
+                                </a>
+                            </li>
+                            <li>
+                                <div class="flex items-center">
+                                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ml-2">{{ guild_name or 'Server' }} Settings</span>
+                                </div>
+                            </li>
+                        </ol>
+                    </nav>
 
-                <section id="welcome">
-                    <h2>Welcome Settings</h2>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" name="welcome_enabled" 
-                                   {% if settings.get('welcome', {}).get('enabled') %}checked{% endif %}>
-                            Enable Welcome Messages
-                        </label>
+                    <!-- Server Header -->
+                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-8 transition-colors duration-300">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+                                {{ guild_name[0] if guild_name else 'S' }}
+                            </div>
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ guild_name or 'Server Settings' }}</h1>
+                                <p class="text-gray-600 dark:text-gray-400">Configure BronxBot for this server</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Welcome Channel</label>
-                        <select name="welcome_channel" class="form-control">
-                            <option value="">Select Channel</option>
-                            {% for channel in channels %}
-                                <option value="{{ channel.id }}" {% if settings.get('welcome', {}).get('channel_id') == channel.id %}selected{% endif %}>
-                                    #{{ channel.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Welcome Message</label>
-                        <textarea name="welcome_message">{{ settings.get('welcome', {}).get('message', '') }}</textarea>
-                    </div>
-                </section>
 
-                <section id="moderation">
-                    <h2>Moderation Settings</h2>
-                    <div class="form-group">
-                        <label>Log Channel</label>
-                        <select name="log_channel" class="form-control">
-                            <option value="">Select Channel</option>
-                            {% for channel in channels %}
-                                <option value="{{ channel.id }}" {% if settings.get('moderation', {}).get('log_channel') == channel.id %}selected{% endif %}>
-                                    #{{ channel.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Mute Role</label>
-                        <select name="mute_role" class="form-control">
-                            <option value="">Select Role</option>
-                            {% for role in roles %}
-                                <option value="{{ role.id }}" {% if settings.get('moderation', {}).get('mute_role') == role.id %}selected{% endif %}>
-                                    {{ role.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Jail Role</label>
-                        <select name="jail_role" class="form-control">
-                            <option value="">Select Role</option>
-                            {% for role in roles %}
-                                <option value="{{ role.id }}" {% if settings.get('moderation', {}).get('jail_role') == role.id %}selected{% endif %}>
-                                    {{ role.name }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </section>
+                    <!-- Settings Categories -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- General Settings -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="text-blue-600 dark:text-blue-400" viewBox="0 0 256 256">
+                                        <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.12-3.12L186-99.46a8,8,0,0,0-3.93-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40q-2.16-.06-4.32,0L107.2,25.11a8,8,0,0,0-7.06-1.49A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.48-3.12,3.12L40.54,70.05a8,8,0,0,0-6,3.93,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84q-.06,2.16,0,4.32L25.11,148.8a8,8,0,0,0-1.49,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64c1,1.08,2,2.15,3.12,3.12l2.64,23.72a8,8,0,0,0,3.93,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.49,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.12-3.12L215.46,186a8,8,0,0,0,6-3.93,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,192a64,64,0,1,1,64-64A64.07,64.07,0,0,1,128,192Z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">General</h3>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Basic bot configuration and server settings</p>
+                            <button class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                Configure
+                            </button>
+                        </div>
 
-                <button type="submit" class="btn btn-primary">Save Settings</button>
-            </form>
-        </main>
-        {% endif %}
+                        <!-- Moderation Settings -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="text-red-600 dark:text-red-400" viewBox="0 0 256 256">
+                                        <path d="M208,40H48A16,16,0,0,0,32,56V200a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V56A16,16,0,0,0,208,40ZM112,176a12,12,0,1,1,12-12A12,12,0,0,1,112,176Zm8-40V80a8,8,0,0,1,16,0v56a8,8,0,0,1-16,0Z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Moderation</h3>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Auto-moderation, warnings, and punishment settings</p>
+                            <button class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                                Configure
+                            </button>
+                        </div>
+
+                        <!-- Economy Settings -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="text-green-600 dark:text-green-400" viewBox="0 0 256 256">
+                                        <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM168,96H152V80a8,8,0,0,0-16,0V96H120a8,8,0,0,0,0,16h16v64H120a8,8,0,0,0,0,16h16v16a8,8,0,0,0,16,0V192h16a8,8,0,0,0,0-16H152V112h16a8,8,0,0,0,0-16Z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Economy</h3>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Currency settings, rewards, and shop configuration</p>
+                            <button class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                Configure
+                            </button>
+                        </div>
+
+                        <!-- Music Settings -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="text-purple-600 dark:text-purple-400" viewBox="0 0 256 256">
+                                        <path d="M212.92,25.69a8,8,0,0,0-6.86-1.45L80.08,50.38A16,16,0,0,0,68,66.15V189.85A32,32,0,1,0,84,216V153.85L196,127.48V165.85A32,32,0,1,0,212,192V32A8,8,0,0,0,212.92,25.69ZM52,240a16,16,0,1,1,16-16A16,16,0,0,1,52,240ZM84,135.48V66.15l112-23.89V111.59ZM180,208a16,16,0,1,1,16-16A16,16,0,0,1,180,208Z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Music</h3>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Music bot settings, playlists, and permissions</p>
+                            <button class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                Configure
+                            </button>
+                        </div>
+
+                        <!-- Welcome Settings -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="text-yellow-600 dark:text-yellow-400" viewBox="0 0 256 256">
+                                        <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm40-68a28,28,0,1,1-28-28A28,28,0,0,1,168,148Zm-56,0a28,28,0,1,1-28-28A28,28,0,0,1,112,148ZM128,180c-17.64,0-32-12.54-32-28a8,8,0,1,1,16,0c0,7.18,7.82,12,16,12s16-4.82,16-12a8,8,0,1,1,16,0C160,167.46,145.64,180,128,180Z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Welcome</h3>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Welcome messages, roles, and new member settings</p>
+                            <button class="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors">
+                                Configure
+                            </button>
+                        </div>
+
+                        <!-- Logging Settings -->
+                        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all duration-300">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="text-indigo-600 dark:text-indigo-400" viewBox="0 0 256 256">
+                                        <path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48ZM32,64H224V192H32ZM48,96V80a8,8,0,0,1,16,0V96a8,8,0,0,1-16,0Zm32,0V80a8,8,0,0,1,16,0V96a8,8,0,0,1-16,0Zm32,0V80a8,8,0,0,1,16,0V96a8,8,0,0,1-16,0Z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Logging</h3>
+                            </div>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">Server logs, audit trails, and event tracking</p>
+                            <button class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                                Configure
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/prefix-handler.js') }}"></script>
+    <script>
+        // Dark mode toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+
+        // Check for saved theme preference or default to light mode
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.classList.add(currentTheme);
+        
+        if (currentTheme === 'dark') {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // User dropdown functionality
+        const dropdownToggle = document.getElementById('user-dropdown-toggle');
+        const dropdownMenu = document.getElementById('user-dropdown-menu');
+
+        dropdownToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+    </script>
 </body>
 </html>

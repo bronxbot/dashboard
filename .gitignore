@@ -1,17 +1,54 @@
-.venv
-data
-.gitignore
-cogs/__pycache__
-.vscode
-cogs/bronx/__pycache__
-cogs/misc/__pycache__
-cogs/unique/__pycache__
-utils/__pycache__/
-cogs/admin/__pycache__
-__pycache__
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environment
+.venv/
+venv/
+
+# Environment variables
 .env
-bronxbot-nginx.conf
-vercel.json
-vercel_requirements.txt
-dashboard/bronxbot-web.service
-**/__pycache__/
+.env.local
+local/.env
+
+# Local development directory (except templates)
+local/venv/
+local/*.log
+local/test_results/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Flask
+instance/
+
+# Database
+data/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Testing files
+test_results/
+*.test.log
+coverage/
+htmlcov/
+
+# Docker volumes
+mongodb_test_data/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
