@@ -1,3 +1,5 @@
+<!-- DEPRECATED: This template is no longer used. Settings functionality has been merged into servers.html -->
+<!-- All /settings routes now redirect to /servers -->
 <!DOCTYPE html>
 <html class="transition-colors duration-300">
 <head>
@@ -61,7 +63,11 @@
                             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                         </svg>
                     </button>
-                    <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
+                    <!-- Logo with Image and Text -->
+                    <div class="flex items-center gap-3">
+                        <img src="{{ url_for('static', filename='images/southbronx.png') }}" alt="BronxBot Logo" class="w-8 h-8 rounded-full">
+                        <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
+                    </div>
                 </div>
 
                 <!-- Desktop navigation -->

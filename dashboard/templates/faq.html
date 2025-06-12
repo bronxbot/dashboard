@@ -92,15 +92,10 @@
                             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                         </svg>
                     </button>
-                    <div class="w-6 h-6">
-                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-500">
-                            <path
-                                d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
-                                fill="currentColor"
-                            ></path>
-                        </svg>
+                    <div class="flex items-center gap-3">
+                        <img src="{{ url_for('static', filename='images/southbronx.png') }}" alt="BronxBot Logo" class="w-8 h-8 rounded-full">
+                        <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                     </div>
-                    <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                 </div>
 
                 <!-- Desktop navigation -->
@@ -110,36 +105,48 @@
                         <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/servers">Servers</a>
                         <a class="text-[#0c7ff2] dark:text-blue-400 text-sm font-medium leading-normal px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30" href="/faq">FAQ</a>
                         <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="https://github.com/BronxBot/Dashboard">GitHub</a>
                     </div>
                     
                     <!-- User Avatar Dropdown (if logged in) -->
                     {% if request.cookies.get('user_id') %}
-                    <div class="relative">
-                        <button id="user-dropdown-toggle" class="flex items-center gap-2 spin-360 focus:outline-none">
-                            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-transparent hover:border-blue-400 transition-all duration-300" 
-                                 style='background-image: url("https://cdn.discordapp.com/avatars/{{ request.cookies.get("user_id") }}/{{ request.cookies.get("avatar_hash", "default") }}.png?size=64");'
-                                 title="{{ request.cookies.get('username', 'User') }}">
-                            </div>
-                        </button>
+                    <div class="flex gap-2">
+                        <a href="/logout" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#dc2626] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#b91c1c] transition-colors">
+                            <span class="truncate">Logout</span>
+                        </a>
                         
-                        <!-- Dropdown Menu -->
-                        <div id="user-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                            <div class="py-2">
+                        <div class="relative">
+                            <button id="user-dropdown-toggle" class="flex items-center gap-2 hover:opacity-80 transition-opacity spin-360">
+                                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#0c7ff2]" 
+                                     style='background-image: url("https://cdn.discordapp.com/avatars/{{ request.cookies.get("user_id") }}/{{ request.cookies.get("avatar_hash", "") }}.png?size=64");'
+                                     title="{{ request.cookies.get('username', 'User') }}">
+                                </div>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div id="user-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                                 <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
                                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">Admin Panel</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">#{{ request.cookies.get('user_id', '')[-4:] if request.cookies.get('user_id') else '' }}</p>
                                 </div>
-                                <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-                                        <path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H48V208h56A8,8,0,0,1,112,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L188.69,112H112a8,8,0,0,0,0,16h76.69l-18.35,18.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,221.66,122.34Z"></path>
+                                <a href="/servers" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     </svg>
-                                    Log Out
+                                    Manage Servers
+                                </a>
+                                <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Logout
                                 </a>
                             </div>
                         </div>
                     </div>
                     {% else %}
-                    <button onclick="window.location.href='/login'" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#0b80ee] dark:bg-blue-600 text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-blue-700 dark:hover:bg-blue-500 transition-colors">
+                    <button onclick="window.location.href='/login'" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#0c7ff2] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#0a6ad1] transition-colors">
                         <span class="truncate">Login with Discord</span>
                     </button>
                     {% endif %}

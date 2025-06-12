@@ -80,15 +80,8 @@
                             <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                         </svg>
                     </button>
-                    <div class="flex items-center gap-2">
-                        <div class="w-6 h-6">
-                            <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-500">
-                                <path
-                                    d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
-                                    fill="currentColor"
-                                ></path>
-                            </svg>
-                        </div>
+                    <div class="flex items-center gap-3">
+                        <img src="{{ url_for('static', filename='images/southbronx.png') }}" alt="BronxBot Logo" class="w-8 h-8 rounded-full">
                         <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                     </div>
                 </div>
@@ -129,12 +122,12 @@
                                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
                                     <p class="text-xs text-gray-500 dark:text-gray-400">#{{ request.cookies.get('user_id', '')[-4:] if request.cookies.get('user_id') else '' }}</p>
                                 </div>
-                                <a href="/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <a href="/servers" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     </svg>
-                                    Settings
+                                    Manage Servers
                                 </a>
                                 <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,36 +191,36 @@
                                 <p class="text-[#49739c] dark:text-gray-300 text-sm font-normal leading-normal">Total Users</p>
                             </div>
                         </div>
-                        <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] bg-slate-50 p-4 flex-col">
-                            <div class="text-[#0d141c]" data-icon="Clock" data-size="24px" data-weight="regular">
+                        <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] dark:border-gray-600 bg-slate-50 dark:bg-gray-800 p-4 flex-col transition-colors duration-300">
+                            <div class="text-[#0d141c] dark:text-white" data-icon="Clock" data-size="24px" data-weight="regular">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
                                     <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"></path>
                                 </svg>
                             </div>
                             <div class="flex flex-col gap-1">
-                                <h2 class="text-[#0d141c] text-xl font-bold leading-tight" id="uptime" data-uptime="{{ stats.uptime }}">{{ stats.uptime }}s</h2>
-                                <p class="text-[#49739c] text-sm font-normal leading-normal">Uptime</p>
+                                <h2 class="text-[#0d141c] dark:text-white text-xl font-bold leading-tight" id="uptime" data-uptime="{{ stats.uptime }}">{{ stats.uptime }}s</h2>
+                                <p class="text-[#49739c] dark:text-gray-300 text-sm font-normal leading-normal">Uptime</p>
                             </div>
                         </div>
-                        <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] bg-slate-50 p-4 flex-col">
-                            <div class="text-[#0d141c]" data-icon="Lightning" data-size="24px" data-weight="regular">
+                        <div class="flex flex-1 gap-3 rounded-lg border border-[#cedbe8] dark:border-gray-600 bg-slate-50 dark:bg-gray-800 p-4 flex-col transition-colors duration-300">
+                            <div class="text-[#0d141c] dark:text-white" data-icon="Lightning" data-size="24px" data-weight="regular">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
                                     <path d="M215.79,118.17a8,8,0,0,0-5-5.66L153.18,90.9l14.66-73.33a8,8,0,0,0-13.69-7l-112,120a8,8,0,0,0,3,13l57.63,21.61L88.16,238.43a8,8,0,0,0,13.69,7l112-120A8,8,0,0,0,215.79,118.17ZM109.37,214l10.47-52.38a8,8,0,0,0-5-9.06L62,132.71l84.62-90.66L136.16,94.43a8,8,0,0,0,5,9.06l52.8,19.8Z"></path>
                                 </svg>
                             </div>
                             <div class="flex flex-col gap-1">
-                                <h2 class="text-[#0d141c] text-xl font-bold leading-tight">{{ stats.latency if stats.latency else 'N/A' }}ms</h2>
-                                <p class="text-[#49739c] text-sm font-normal leading-normal">Latency</p>
+                                <h2 class="text-[#0d141c] dark:text-white text-xl font-bold leading-tight">{{ stats.latency if stats.latency else 'N/A' }}ms</h2>
+                                <p class="text-[#49739c] dark:text-gray-300 text-sm font-normal leading-normal">Latency</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Quick Actions -->
                     <div class="p-4">
-                        <h2 class="text-[#0d141c] text-xl font-bold leading-tight mb-4">Quick Actions</h2>
+                        <h2 class="text-[#0d141c] dark:text-white text-xl font-bold leading-tight mb-4 transition-colors duration-300">Quick Actions</h2>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <a href="/servers" class="block">
-                                <div class="border border-[#cedbe8] rounded-lg p-6 hover:shadow-md transition-shadow bg-white hover:bg-gray-50">
+                                <div class="border border-[#cedbe8] dark:border-gray-600 rounded-lg p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <div class="flex items-center gap-4">
                                         <div class="w-12 h-12 bg-[#0c7ff2] rounded-lg flex items-center justify-center">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="white" viewBox="0 0 256 256">
@@ -235,8 +228,8 @@
                                             </svg>
                                         </div>
                                         <div class="flex-1">
-                                            <h3 class="text-[#0d141c] font-semibold text-lg">Manage Servers</h3>
-                                            <p class="text-[#49739c] text-sm">Configure bot settings for your Discord servers</p>
+                                            <h3 class="text-[#0d141c] dark:text-white font-semibold text-lg transition-colors duration-300">Manage Servers</h3>
+                                            <p class="text-[#49739c] dark:text-gray-300 text-sm transition-colors duration-300">Configure bot settings for your Discord servers</p>
                                         </div>
                                         <div class="text-[#0c7ff2]">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
@@ -248,7 +241,7 @@
                             </a>
                             
                             <a href="https://discord.com/api/oauth2/authorize?client_id={{ config.CLIENT_ID }}&permissions=8&scope=bot%20applications.commands" target="_blank" rel="noopener" class="block">
-                                <div class="border border-[#cedbe8] rounded-lg p-6 hover:shadow-md transition-shadow bg-white hover:bg-gray-50">
+                                <div class="border border-[#cedbe8] dark:border-gray-600 rounded-lg p-6 hover:shadow-md transition-all duration-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
                                     <div class="flex items-center gap-4">
                                         <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="white" viewBox="0 0 256 256">
@@ -256,8 +249,8 @@
                                             </svg>
                                         </div>
                                         <div class="flex-1">
-                                            <h3 class="text-[#0d141c] font-semibold text-lg">Add Bot to Server</h3>
-                                            <p class="text-[#49739c] text-sm">Invite BronxBot to a new Discord server</p>
+                                            <h3 class="text-[#0d141c] dark:text-white font-semibold text-lg transition-colors duration-300">Add Bot to Server</h3>
+                                            <p class="text-[#49739c] dark:text-gray-300 text-sm transition-colors duration-300">Invite BronxBot to a new Discord server</p>
                                         </div>
                                         <div class="text-green-600">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
@@ -273,15 +266,15 @@
                     <!-- Shard Status (if available) -->
                     {% if stats.shards %}
                     <div class="p-4">
-                        <h2 class="text-[#0d141c] text-xl font-bold leading-tight mb-4">🔋 Shard Status</h2>
-                        <div class="bg-white rounded-lg border border-[#cedbe8] p-6">
+                        <h2 class="text-[#0d141c] dark:text-white text-xl font-bold leading-tight mb-4 transition-colors duration-300">🔋 Shard Status</h2>
+                        <div class="bg-white dark:bg-gray-800 rounded-lg border border-[#cedbe8] dark:border-gray-600 p-6 transition-colors duration-300">
                             <div class="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4">
                                 {% for shard in stats.shards %}
                                 <div class="text-center">
-                                    <div class="text-2xl font-bold text-[#0d141c]">{{ shard.id }}</div>
-                                    <div class="text-sm text-[#49739c]">Shard {{ shard.id }}</div>
+                                    <div class="text-2xl font-bold text-[#0d141c] dark:text-white transition-colors duration-300">{{ shard.id }}</div>
+                                    <div class="text-sm text-[#49739c] dark:text-gray-300 transition-colors duration-300">Shard {{ shard.id }}</div>
                                     <div class="mt-2">
-                                        <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium {{ 'bg-green-100 text-green-800' if shard.status == 'online' else 'bg-red-100 text-red-800' }}">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium {{ 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' if shard.status == 'online' else 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' }}">
                                             {{ shard.status|title }}
                                         </span>
                                     </div>
@@ -294,9 +287,9 @@
 
                     <!-- Help Section -->
                     <div class="p-4">
-                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                            <h3 class="text-[#0d141c] font-semibold text-lg mb-2">Need Help?</h3>
-                            <p class="text-[#49739c] text-sm mb-4">Check out our resources to get the most out of BronxBot.</p>
+                        <div class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-6 transition-colors duration-300">
+                            <h3 class="text-[#0d141c] dark:text-white font-semibold text-lg mb-2 transition-colors duration-300">Need Help?</h3>
+                            <p class="text-[#49739c] dark:text-gray-300 text-sm mb-4 transition-colors duration-300">Check out our resources to get the most out of BronxBot.</p>
                             <div class="flex flex-wrap gap-3">
                                 <a href="https://discord.gg/jENm4phpgv" target="_blank" rel="noopener"
                                    class="inline-flex items-center px-3 py-2 rounded-lg bg-[#5865F2] text-white text-sm font-medium hover:bg-[#4752C4] transition-colors">
@@ -306,7 +299,7 @@
                                     Support Server
                                 </a>
                                 <a href="https://github.com/BronxBot/Dashboard" target="_blank" rel="noopener"
-                                   class="inline-flex items-center px-3 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-700 transition-colors">
+                                   class="inline-flex items-center px-3 py-2 rounded-lg bg-gray-800 dark:bg-gray-700 text-white text-sm font-medium hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256" class="mr-2">
                                         <path d="M208.31,75.68A59.78,59.78,0,0,0,202.93,28,8,8,0,0,0,196,24a59.75,59.75,0,0,0-48,24H124A59.75,59.75,0,0,0,76,24a8,8,0,0,0-6.93,4,59.78,59.78,0,0,0-5.38,47.68A58.14,58.14,0,0,0,56,104v8a56.06,56.06,0,0,0,48.44,55.47A39.8,39.8,0,0,0,96,192v8H72a24,24,0,0,1-24-24A40,40,0,0,0,8,136a8,8,0,0,0,0,16,24,24,0,0,1,24,24,40,40,0,0,0,40,40H96v16a8,8,0,0,0,16,0V192a24,24,0,0,1,48,0v40a8,8,0,0,0,16,0V192a39.8,39.8,0,0,0-8.44-24.53A56.06,56.06,0,0,0,216,112v-8A58.14,58.14,0,0,0,208.31,75.68ZM200,112a40,40,0,0,1-40,40H112a40,40,0,0,1-40-40v-8a41.74,41.74,0,0,1,6.9-22.48A8,8,0,0,0,80,73.83a43.81,43.81,0,0,1,.79-33.58,43.88,43.88,0,0,1,32.32,20.06A8,8,0,0,0,119.82,64h32.35a8,8,0,0,0,6.74-3.69,43.87,43.87,0,0,1,32.32-20.06A43.81,43.81,0,0,1,192,73.83a8.09,8.09,0,0,0,1,7.65A41.72,41.72,0,0,1,200,104Z"></path>
                                     </svg>

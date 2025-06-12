@@ -49,8 +49,26 @@ if not os.path.exists(data_dir):
 # Stats file path
 stats_file = os.path.join(data_dir, 'stats.json')
 
+# Global stats for Render deployment (since file persistence isn't reliable)
+# Check if we're running on Render (or similar ephemeral filesystem environment)
+IS_RENDER_DEPLOYMENT = os.environ.get('RENDER') or os.environ.get('RAILWAY') or os.environ.get('HEROKU')
+
+# Global stats dictionary for ephemeral deployments
+GLOBAL_STATS = {
+    "uptime": {"days": 0, "hours": 0, "minutes": 0},
+    "guilds": {"count": 0, "history": []},
+    "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}},
+    "last_updated": datetime.now().isoformat()
+}
+
 def load_stats():
-    """Load stats from JSON file"""
+    """Load stats from global variable or JSON file"""
+    global GLOBAL_STATS
+    
+    if IS_RENDER_DEPLOYMENT:
+        # Use global stats for ephemeral deployments
+        return GLOBAL_STATS
+    
     try:
         with open(stats_file, 'r') as f:
             return json.load(f)
@@ -67,9 +85,17 @@ def load_stats():
         return {}
 
 def save_stats(stats):
-    """Save stats to JSON file"""
+    """Save stats to global variable or JSON file"""
+    global GLOBAL_STATS
+    
+    stats['last_updated'] = datetime.now().isoformat()
+    
+    if IS_RENDER_DEPLOYMENT:
+        # Update global stats for ephemeral deployments
+        GLOBAL_STATS.update(stats)
+        return True
+    
     try:
-        stats['last_updated'] = datetime.now().isoformat()
         with open(stats_file, 'w') as f:
             json.dump(stats, f, indent=2)
         return True
@@ -633,6 +659,12 @@ def servers():
             guild['member_count'] = bot_guild_lookup[guild_id].get('member_count', 0)
         else:
             guild['member_count'] = 0
+            
+        # Add server settings if bot is present
+        if guild['bot_present']:
+            guild['settings'] = get_guild_settings(guild_id)
+        else:
+            guild['settings'] = None
     
     # Sort guilds to show bot-present servers first
     manage_guilds.sort(key=lambda g: (not g['bot_present'], g['name'].lower()))
@@ -801,34 +833,50 @@ def update_settings(guild_id):
 
 @app.route('/settings')
 @login_required
-def settings_select():
-    """Show server selection for settings"""
-    access_token = request.cookies.get('access_token')
-    if not access_token:
-        return redirect('/login')
+def settings_redirect():
+    """Redirect settings to servers page"""
+    return redirect('/servers')
+
+@app.route('/api/guild/<guild_id>/quick-setting', methods=['POST'])
+@login_required
+def update_quick_setting(guild_id):
+    """API endpoint to update quick settings"""
+    try:
+        data = request.get_json()
+        setting = data.get('setting')
+        enabled = data.get('enabled', False)
         
-    user_guilds = get_user_guilds(access_token)
-    bot_guilds = get_bot_guilds()
-    
-    # Filter guilds where user has manage server permission
-    manage_guilds = [
-        guild for guild in user_guilds 
-        if (int(guild['permissions']) & 0x20) == 0x20
-    ]
-    
-    # Add bot presence info
-    for guild in manage_guilds:
-        guild['bot_present'] = str(guild['id']) in bot_guilds
-        guild['icon_url'] = f"https://cdn.discordapp.com/icons/{guild['id']}/{guild['icon']}.png" if guild['icon'] else None
-    
-    # Sort guilds to show bot-present servers first
-    manage_guilds.sort(key=lambda g: (not g['bot_present'], g['name'].lower()))
-    
-    return render_template('settings_select.html',
-        guilds=manage_guilds,
-        username=request.cookies.get('username', 'User'),
-        config={'CLIENT_ID': DISCORD_CLIENT_ID}
-    )
+        # Verify user has access to this server
+        access_token = request.cookies.get('access_token')
+        if not access_token:
+            return jsonify({"success": False, "error": "No access token"}), 401
+        
+        user_guilds = get_user_guilds(access_token)
+        user_guild = next((g for g in user_guilds if str(g['id']) == str(guild_id)), None)
+        if not user_guild or not (int(user_guild['permissions']) & 0x20):
+            return jsonify({"success": False, "error": "Unauthorized"}), 403
+        
+        # Update setting in database
+        if MONGODB_AVAILABLE and db:
+            update_data = {}
+            if setting == 'welcome_messages':
+                update_data['welcome.enabled'] = enabled
+            elif setting == 'auto_moderation':
+                update_data['moderation.automod_enabled'] = enabled
+            
+            result = db.guild_settings.update_one(
+                {"_id": str(guild_id)},
+                {"$set": update_data},
+                upsert=True
+            )
+            
+            return jsonify({"success": True, "message": "Setting updated successfully"})
+        else:
+            return jsonify({"success": False, "error": "Database not available"}), 503
+            
+    except Exception as e:
+        print(f"Error updating quick setting: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/user/<user_id>/balance')
 @login_required

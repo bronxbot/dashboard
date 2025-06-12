@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="transition-colors duration-300">
 <head>
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
     <link
@@ -25,82 +25,180 @@
     <meta name="theme-color" content="#5865F2">
 
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <!-- Prevent flash of unstyled content by setting theme immediately -->
+    <script>
+        (function() {
+            try {
+                const theme = localStorage.getItem('theme') || 'light';
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) {
+                // Fallback for environments without localStorage
+            }
+        })();
+    </script>
+    <style>
+        @keyframes spin360 {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-360:hover {
+            animation: spin360 0.6s ease-in-out;
+        }
+        .dropdown-menu {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        .dropdown-menu.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body>
-    <div class="relative flex size-full min-h-screen flex-col bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 group/design-root overflow-x-hidden" style='font-family: Inter, "Noto Sans", sans-serif;'>
+    <div class="relative flex size-full min-h-screen flex-col bg-slate-50 dark:bg-gray-900 group/design-root overflow-x-hidden transition-colors duration-300" style='font-family: Inter, "Noto Sans", sans-serif;'>
         <div class="layout-container flex h-full grow flex-col">
-            <!-- Header -->
-            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-white/10 px-10 py-3 backdrop-blur-sm">
-                <div class="flex items-center gap-4 text-white">
-                    <div class="size-4">
-                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path
-                                d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
-                                fill="currentColor"
-                            ></path>
+            <!-- Consistent Header -->
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf4] dark:border-b-gray-700 px-4 md:px-10 py-3 bg-white dark:bg-gray-800 transition-colors duration-300">
+                <div class="flex items-center gap-4 text-[#0d141c] dark:text-white">
+                    <!-- Mobile menu button -->
+                    <button id="mobile-menu-toggle" class="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
-                    </div>
-                    <h2 class="text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
-                </div>
-                <div class="flex flex-1 justify-end gap-8">
-                    <div class="flex items-center gap-9">
-                        <a class="text-white/80 text-sm font-medium leading-normal hover:text-white transition-colors" href="/">Dashboard</a>
-                        <a class="text-white/80 text-sm font-medium leading-normal hover:text-white transition-colors" href="/servers">Servers</a>
-                        <a class="text-white text-sm font-medium leading-normal" href="/settings">Settings</a>
-                    </div>
+                    </button>
+                    
+                    <!-- Dark/Light Mode Toggle -->
+                    <button id="theme-toggle" class="relative flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 ease-in-out transform hover:scale-105">
+                        <!-- Sun Icon (Light Mode) -->
+                        <svg id="sun-icon" class="w-5 h-5 text-yellow-500 transition-all duration-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                        </svg>
+                        <!-- Moon Icon (Dark Mode) -->
+                        <svg id="moon-icon" class="w-5 h-5 text-gray-300 transition-all duration-300 hidden" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                        </svg>
+                    </button>
+                    <!-- Logo with Image and Text -->
                     <div class="flex items-center gap-3">
-                        {% if session.user_id %}
-                        <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-8" 
-                             style="background-image: url('https://cdn.discordapp.com/avatars/{{ session.user_id }}/{{ session.user_avatar }}.png?size=64');"></div>
-                        {% endif %}
-                        <a href="/logout" class="text-white/80 hover:text-white transition-colors text-sm font-medium">Logout</a>
+                        <img src="{{ url_for('static', filename='images/southbronx.png') }}" alt="BronxBot Logo" class="w-8 h-8 rounded-full">
+                        <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
+                    </div>
+                </div>
+
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex flex-1 justify-end gap-8">
+                    <div class="flex items-center gap-9">
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/">Dashboard</a>
+                        <a class="text-[#0c7ff2] dark:text-blue-400 text-sm font-medium leading-normal px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30" href="/servers">Manage Servers</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="/faq">FAQ</a>
+                        <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 px-3 py-2 rounded-lg transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
+                    </div>
+                    
+                    <!-- User Avatar Dropdown -->
+                    <div class="relative">
+                        <button id="user-dropdown-toggle" class="flex items-center gap-2 spin-360 focus:outline-none">
+                            <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-transparent hover:border-blue-400 transition-all duration-300" 
+                                 style='background-image: url("https://cdn.discordapp.com/avatars/{{ request.cookies.get("user_id") }}/{{ request.cookies.get("avatar_hash", "default") }}.png?size=64");'
+                                 title="{{ request.cookies.get('username', 'User') }}">
+                            </div>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div id="user-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
+                            <div class="py-2">
+                                <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">#{{ request.cookies.get('user_id', '')[-4:] if request.cookies.get('user_id') else '' }}</p>
+                                </div>
+                                {% if request.cookies.get('user_id') %}
+                                <a href="/" class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                    Admin Dashboard
+                                </a>
+                                {% endif %}
+                                <a href="/servers" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
+                                    </svg>
+                                    Manage Servers
+                                </a>
+                                <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
 
+            <!-- Mobile navigation menu -->
+            <div id="mobile-menu" class="hidden md:hidden bg-white dark:bg-gray-800 border-b border-[#e7edf4] dark:border-gray-700 px-4 py-4 transition-colors duration-300">
+                <div class="flex flex-col gap-4">
+                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="/">Dashboard</a>
+                    <a class="text-[#0c7ff2] dark:text-blue-400 text-sm font-medium leading-normal px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30" href="/servers">Manage Servers</a>
+                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="/faq">FAQ</a>
+                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
+                </div>
+            </div>
+
             <!-- Main Content -->
-            <div class="px-10 flex flex-1 justify-center py-5">
+            <div class="px-4 md:px-10 flex flex-1 justify-center py-5">
                 <div class="layout-content-container flex flex-col max-w-6xl flex-1">
                     <div class="flex flex-wrap justify-between gap-3 p-4">
                         <div class="flex min-w-72 flex-col gap-3">
-                            <p class="text-white tracking-light text-[32px] font-bold leading-tight">Select a Server</p>
-                            <p class="text-white/60 text-sm font-normal leading-normal">Choose a server to configure BronxBot settings</p>
+                            <p class="text-[#0d141c] dark:text-white tracking-light text-[32px] font-bold leading-tight">Select a Server</p>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm font-normal leading-normal">Choose a server to configure BronxBot settings</p>
                         </div>
                     </div>
 
                     <!-- Server Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4">
                         {% for guild in guilds %}
-                        <div class="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 hover:border-white/40 transition-all {{ 'opacity-50 cursor-not-allowed' if not guild.bot_present else 'hover:bg-white/20' }}">
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-400 dark:hover:border-blue-600 transition-all duration-300 {{ 'opacity-50 cursor-not-allowed' if not guild.bot_present else 'hover:shadow-lg' }}">
                             {% if guild.bot_present %}
                             <a href="/servers/{{ guild.id }}/settings" class="block p-6">
                             {% else %}
                             <div class="block p-6">
                             {% endif %}
                                 <div class="flex items-center gap-4">
-                                    <div class="w-16 h-16 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+                                    <div class="w-16 h-16 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                                         {% if guild.icon_url %}
                                             <img src="{{ guild.icon_url }}" alt="{{ guild.name }}" class="w-full h-full object-cover">
                                         {% else %}
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" fill="white" viewBox="0 0 256 256">
-                                                <path d="M176,24H80A16,16,0,0,0,64,40V216a8,8,0,0,0,11.58,7.16L128,200l52.42,23.16A8,8,0,0,0,192,216V40A16,16,0,0,0,176,24Z"></path>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" fill="currentColor" class="text-gray-500 dark:text-gray-400" viewBox="0 0 256 256">
+                                                <path d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
                                             </svg>
                                         {% endif %}
                                     </div>
                                     <div class="flex-1">
-                                        <h3 class="text-white text-lg font-bold leading-tight truncate">{{ guild.name }}</h3>
+                                        <h3 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight truncate">{{ guild.name }}</h3>
                                         <div class="flex items-center gap-2 mt-2">
                                             {% if guild.bot_present %}
                                                 <div class="w-2 h-2 bg-green-400 rounded-full"></div>
-                                                <span class="text-green-400 text-sm font-medium">Bot Active</span>
+                                                <span class="text-green-600 dark:text-green-400 text-sm font-medium">Bot Active</span>
                                             {% else %}
                                                 <div class="w-2 h-2 bg-red-400 rounded-full"></div>
-                                                <span class="text-red-400 text-sm font-medium">Bot Not Added</span>
+                                                <span class="text-red-600 dark:text-red-400 text-sm font-medium">Bot Not Added</span>
                                             {% endif %}
                                         </div>
                                     </div>
                                     {% if guild.bot_present %}
-                                    <div class="text-white/60">
+                                    <div class="text-gray-500 dark:text-gray-400">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
                                             <path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"></path>
                                         </svg>
@@ -108,8 +206,8 @@
                                     {% endif %}
                                 </div>
                                 {% if not guild.bot_present %}
-                                <div class="mt-4 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-                                    <p class="text-yellow-300 text-sm">
+                                <div class="mt-4 p-3 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 rounded-lg">
+                                    <p class="text-yellow-800 dark:text-yellow-300 text-sm">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256" class="inline mr-2">
                                             <path d="M236.8,188.09,149.35,36.22h0a24,24,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24,24,0,0,0,40.55,224h174.9a24,24,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM120,104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm8,88a12,12,0,1,1,12-12A12,12,0,0,1,128,192Z"></path>
                                         </svg>
@@ -129,13 +227,13 @@
                     <!-- No servers message -->
                     {% if not guilds %}
                     <div class="flex flex-col items-center justify-center py-20">
-                        <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" fill="white" viewBox="0 0 256 256">
-                                <path d="M176,24H80A16,16,0,0,0,64,40V216a8,8,0,0,0,11.58,7.16L128,200l52.42,23.16A8,8,0,0,0,192,216V40A16,16,0,0,0,176,24Z"></path>
+                        <div class="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" fill="currentColor" class="text-gray-500 dark:text-gray-400" viewBox="0 0 256 256">
+                                <path d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path>
                             </svg>
                         </div>
-                        <h3 class="text-white text-xl font-bold mb-2">No Servers Found</h3>
-                        <p class="text-white/60 text-center mb-6">You don't have any Discord servers where you can manage BronxBot.</p>
+                        <h3 class="text-[#0d141c] dark:text-white text-xl font-bold mb-2">No Servers Found</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-center mb-6">You don't have any Discord servers where you can manage BronxBot.</p>
                         <a href="https://discord.com/api/oauth2/authorize?client_id={{ config.CLIENT_ID }}&permissions=8&scope=bot%20applications.commands"
                            class="inline-flex items-center px-6 py-3 bg-[#0c7ff2] text-white font-bold rounded-lg hover:bg-[#0a6ad1] transition-colors">
                             Add BronxBot to Server
@@ -146,5 +244,60 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Dark mode toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+        const sunIcon = document.getElementById('sun-icon');
+        const moonIcon = document.getElementById('moon-icon');
+
+        // Check for saved theme preference or default to light mode
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.classList.add(currentTheme);
+        
+        if (currentTheme === 'dark') {
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Mobile menu toggle functionality
+        const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // User dropdown functionality
+        const dropdownToggle = document.getElementById('user-dropdown-toggle');
+        const dropdownMenu = document.getElementById('user-dropdown-menu');
+
+        dropdownToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                dropdownMenu.classList.remove('show');
+            }
+        });
+    </script>
 </body>
 </html>

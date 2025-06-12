@@ -61,15 +61,10 @@
                             <path d="M17.293 13.293A8 8 0 716.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                         </svg>
                     </button>
-                    <div class="w-6 h-6">
-                        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-blue-500">
-                            <path
-                                d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z"
-                                fill="currentColor"
-                            ></path>
-                        </svg>
+                    <div class="flex items-center gap-3">
+                        <img src="{{ url_for('static', filename='images/southbronx.png') }}" alt="BronxBot Logo" class="w-8 h-8 rounded-full">
+                        <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                     </div>
-                    <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                 </div>
 
                 <!-- Desktop navigation -->
@@ -163,14 +158,8 @@
                                 
                                 <div class="space-y-3">
                                     {% if guild.bot_present %}
-                                        <a href="/servers/{{ guild.id }}/settings" 
-                                           class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="mr-2" viewBox="0 0 256 256">
-                                                <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.12-3.12L186-99.46a8,8,0,0,0-3.93-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40q-2.16-.06-4.32,0L107.2,25.11a8,8,0,0,0-7.06-1.49A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.48-3.12,3.12L40.54,70.05a8,8,0,0,0-6,3.93,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84q-.06,2.16,0,4.32L25.11,148.8a8,8,0,0,0-1.49,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64c1,1.08,2,2.15,3.12,3.12l2.64,23.72a8,8,0,0,0,3.93,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.49,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.12-3.12L215.46,186a8,8,0,0,0,6-3.93,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,192a64,64,0,1,1,64-64A64.07,64.07,0,0,1,128,192Z"></path>
-                                            </svg>
-                                            Manage Settings
-                                        </a>
-                                        <div class="grid grid-cols-2 gap-2">
+                                        <!-- Server Statistics -->
+                                        <div class="grid grid-cols-3 gap-2 mb-3">
                                             <div class="text-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
                                                 <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ guild.member_count or 'N/A' }}</div>
                                                 <div class="text-xs text-gray-500 dark:text-gray-400">Members</div>
@@ -179,6 +168,50 @@
                                                 <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ guild.commands_today or '0' }}</div>
                                                 <div class="text-xs text-gray-500 dark:text-gray-400">Commands</div>
                                             </div>
+                                            <div class="text-center p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                                                <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ guild.uptime or 'Online' }}</div>
+                                                <div class="text-xs text-gray-500 dark:text-gray-400">Status</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Bot Configuration Panel -->
+                                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                                            <h4 class="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">Bot Configuration</h4>
+                                            <div class="space-y-2">
+                                                <!-- Quick Settings Toggle -->
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-sm text-blue-800 dark:text-blue-300">Welcome Messages</span>
+                                                    <label class="relative inline-flex items-center cursor-pointer">
+                                                        <input type="checkbox" value="" class="sr-only peer" {% if guild.settings and guild.settings.welcome_enabled %}checked{% endif %}>
+                                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                                    </label>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-sm text-blue-800 dark:text-blue-300">Auto Moderation</span>
+                                                    <label class="relative inline-flex items-center cursor-pointer">
+                                                        <input type="checkbox" value="" class="sr-only peer" {% if guild.settings and guild.settings.automod_enabled %}checked{% endif %}>
+                                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Action Buttons -->
+                                        <div class="flex gap-2">
+                                            <a href="/servers/{{ guild.id }}/settings" 
+                                               class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="mr-1" viewBox="0 0 256 256">
+                                                    <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.12-3.12L186-99.46a8,8,0,0,0-3.93-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40q-2.16-.06-4.32,0L107.2,25.11a8,8,0,0,0-7.06-1.49A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.48-3.12,3.12L40.54,70.05a8,8,0,0,0-6,3.93,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84q-.06,2.16,0,4.32L25.11,148.8a8,8,0,0,0-1.49,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64c1,1.08,2,2.15,3.12,3.12l2.64,23.72a8,8,0,0,0,3.93,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.49,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.12-3.12L215.46,186a8,8,0,0,0,6-3.93,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,192a64,64,0,1,1,64-64A64.07,64.07,0,0,1,128,192Z"></path>
+                                                </svg>
+                                                Settings
+                                            </a>
+                                            <button onclick="viewStats('{{ guild.id }}')" 
+                                                    class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="mr-1" viewBox="0 0 256 256">
+                                                    <path d="M232,208a8,8,0,0,1-8,8H32a8,8,0,0,1-8-8V48a8,8,0,0,1,16,0V156.69l50.34-50.35a8,8,0,0,1,11.32,0L128,132.69,180.69,80H160a8,8,0,0,1,0-16h40a8,8,0,0,1,8,8v40a8,8,0,0,1-16,0V91.31l-58.34,58.35a8,8,0,0,1-11.32,0L96,123.31,48,171.31V200H224A8,8,0,0,1,232,208Z"></path>
+                                                </svg>
+                                                Stats
+                                            </button>
                                         </div>
                                     {% else %}
                                         <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
@@ -269,6 +302,124 @@
         document.addEventListener('click', (e) => {
             if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
                 dropdownMenu.classList.remove('show');
+            }
+        });
+
+        // Stats modal functionality
+        function viewStats(guildId) {
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Server Statistics</h3>
+                        <button onclick="closeStatsModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 256 256">
+                                <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="stats-content">
+                        <div class="text-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                            <p class="text-gray-600 dark:text-gray-400 mt-2">Loading stats...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Fetch and display stats
+            fetch(\`/api/guild/\${guildId}/stats\`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('stats-content').innerHTML = \`
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">General Stats</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Total Members:</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">\${data.member_count || 'N/A'}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Messages Today:</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">\${data.message_count || 'N/A'}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Active Users:</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">\${data.active_users || 'N/A'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                <h4 class="font-semibold text-gray-900 dark:text-white mb-2">Bot Activity</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Commands Used:</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">\${data.commands_used || '0'}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Last Active:</span>
+                                        <span class="font-medium text-gray-900 dark:text-white">\${data.last_active || 'Recently'}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600 dark:text-gray-400">Status:</span>
+                                        <span class="font-medium text-green-600 dark:text-green-400">Online</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    \`;
+                })
+                .catch(error => {
+                    document.getElementById('stats-content').innerHTML = \`
+                        <div class="text-center py-8">
+                            <p class="text-red-600 dark:text-red-400">Failed to load stats</p>
+                        </div>
+                    \`;
+                });
+        }
+
+        function closeStatsModal() {
+            const modal = document.querySelector('.fixed.inset-0');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Settings toggle functionality
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox' && e.target.closest('.bg-blue-50')) {
+                const guildCard = e.target.closest('.bg-white');
+                const guildId = guildCard.querySelector('a[href*="/servers/"]').href.split('/')[4];
+                const settingType = e.target.closest('.flex').querySelector('span').textContent.toLowerCase().replace(' ', '_');
+                
+                // Update setting via API
+                fetch(\`/api/guild/\${guildId}/quick-setting\`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        setting: settingType,
+                        enabled: e.target.checked
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        // Revert toggle if update failed
+                        e.target.checked = !e.target.checked;
+                        alert('Failed to update setting');
+                    }
+                })
+                .catch(error => {
+                    // Revert toggle if request failed
+                    e.target.checked = !e.target.checked;
+                    alert('Failed to update setting');
+                });
             }
         });
     </script>
