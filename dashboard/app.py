@@ -89,7 +89,7 @@ print(f"FLASK_ENV: {os.environ.get('FLASK_ENV', 'not set')}")
 file_lock = threading.Lock()
 
 def load_stats():
-    """Load stats from global variable (production) or JSON file (development)"""
+    """Load stats from MongoDB, global variable (production) or JSON file (development)"""
     global GLOBAL_STATS
     
     # Default stats structure
@@ -100,6 +100,46 @@ def load_stats():
         "performance": {"user_count": 0, "latency": 0, "shard_count": 1},
         "last_updated": datetime.now().isoformat()
     }
+    
+    # Try loading from MongoDB first if available
+    if MONGODB_AVAILABLE and db is not None:
+        try:
+            # Get the global stats document
+            stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
+            if stats_doc:
+                print("Loading stats from MongoDB")
+                # Create a copy of default stats to ensure all keys exist
+                mongo_stats = default_stats.copy()
+                
+                # Update command stats
+                mongo_stats["commands"]["total_executed"] = stats_doc.get("command_count", 0)
+                mongo_stats["commands"]["daily_count"] = stats_doc.get("daily_commands", 0)
+                mongo_stats["commands"]["command_types"] = stats_doc.get("command_types", {})
+                
+                # Update last_updated timestamp
+                if "last_update" in stats_doc:
+                    mongo_stats["last_updated"] = datetime.fromtimestamp(
+                        stats_doc["last_update"]).isoformat()
+                
+                # Load guild information if available in stats_doc or merge with existing data
+                if "guilds" in GLOBAL_STATS:
+                    mongo_stats["guilds"] = GLOBAL_STATS["guilds"]
+                
+                # Load performance data if available or use default
+                mongo_stats["performance"] = GLOBAL_STATS.get("performance", default_stats["performance"])
+                
+                # Update uptime if available or use default
+                mongo_stats["uptime"] = GLOBAL_STATS.get("uptime", default_stats["uptime"])
+                
+                # Merge with GLOBAL_STATS for any missing fields
+                for key in default_stats:
+                    if key not in mongo_stats:
+                        mongo_stats[key] = GLOBAL_STATS.get(key, default_stats[key])
+                
+                return mongo_stats
+        except Exception as e:
+            print(f"Error loading stats from MongoDB: {e}")
+            # Fall back to other methods
     
     if IS_PRODUCTION:
         # Use global stats for production deployments (in-memory storage)
@@ -168,10 +208,44 @@ def load_stats():
             return default_stats
 
 def save_stats(stats):
-    """Save stats to global variable (production) or JSON file (development) with file locking"""
+    """Save stats to MongoDB (if available), global variable (production) or JSON file (development)"""
     global GLOBAL_STATS
     
     stats['last_updated'] = datetime.now().isoformat()
+    
+    # Try saving to MongoDB first if available
+    if MONGODB_AVAILABLE and db is not None:
+        try:
+            print("Saving stats to MongoDB")
+            # Convert stats to MongoDB-friendly format
+            mongo_data = {
+                "command_count": stats.get('commands', {}).get('total_executed', 0),
+                "daily_commands": stats.get('commands', {}).get('daily_count', 0),
+                "command_types": stats.get('commands', {}).get('command_types', {}),
+                "last_update": datetime.now().timestamp(),
+            }
+            
+            # Add daily metrics if available
+            if 'daily_metrics' in stats.get('commands', {}):
+                # Convert datetime strings to timestamps for MongoDB
+                mongo_data['daily_metrics'] = stats['commands']['daily_metrics']
+                
+            # Add guild info if available
+            if 'guilds' in stats:
+                mongo_data['guild_count'] = stats['guilds'].get('count', 0)
+                # Only store minimal guild info to avoid excessive document size
+                
+            # Upsert to MongoDB - use _id as "global_stats" to make it a singleton document
+            db.bot_stats.update_one(
+                {"_id": "global_stats"},
+                {"$set": mongo_data},
+                upsert=True
+            )
+            
+            # Continue with regular storage methods as backup
+        except Exception as e:
+            print(f"Error saving stats to MongoDB: {e}")
+            # Continue with other storage methods as fallback
     
     if IS_PRODUCTION:
         # Update global stats for production deployments (in-memory storage)
@@ -1190,6 +1264,39 @@ def realtime_stats_update():
             print(f"Invalid data type: {data.get('type') if data else 'No data'}")  # Debug logging
             return jsonify({"error": "Invalid real-time update data"}), 400
         
+        # Handle MongoDB direct update if available
+        if MONGODB_AVAILABLE and db is not None:
+            try:
+                # Get the command name if provided
+                command_name = data.get('command')
+                
+                # Update MongoDB directly for better performance
+                update_data = {
+                    "$inc": {
+                        "command_count": 1,
+                        "daily_commands": 1
+                    },
+                    "$set": {
+                        "last_update": datetime.now().timestamp()
+                    }
+                }
+                
+                # Update command type counter if command name provided
+                if command_name:
+                    update_data["$inc"][f"command_types.{command_name}"] = 1
+                
+                # Update MongoDB
+                db.bot_stats.update_one(
+                    {"_id": "global_stats"},
+                    update_data,
+                    upsert=True
+                )
+                
+                # Continue loading stats for the response
+            except Exception as e:
+                print(f"Error with direct MongoDB update: {e}")
+                # Continue with regular stats loading as fallback
+        
         # Load stats with error handling
         try:
             stats = load_stats()
@@ -1244,6 +1351,25 @@ def realtime_stats_update():
                 'timestamp': datetime.now().isoformat()
             })
             stats['commands']['daily_metrics'] = daily_metrics
+            
+            # Update MongoDB directly with the new daily metric if available
+            if MONGODB_AVAILABLE and db is not None:
+                try:
+                    # Add the new daily metric to MongoDB array
+                    today_metric = {
+                        'date': today,
+                        'count': 1,
+                        'timestamp': datetime.now().isoformat()
+                    }
+                    
+                    db.bot_stats.update_one(
+                        {"_id": "global_stats"},
+                        {"$push": {"daily_metrics": today_metric}},
+                        upsert=True
+                    )
+                except Exception as e:
+                    print(f"Error updating daily metrics in MongoDB: {e}")
+                    # Continue with regular stats saving as fallback
         
         # Update command types
         if 'command' in data:
@@ -1282,11 +1408,26 @@ def realtime_stats_update():
 def get_command_metrics():
     """Get command metrics for charts"""
     try:
-        stats_file = os.path.join('data', 'stats.json')
-        with open(stats_file, 'r') as f:
-            stats = json.load(f)
-        
-        daily_metrics = stats.get('commands', {}).get('daily_metrics', [])
+        # Try to get metrics from MongoDB first
+        if MONGODB_AVAILABLE and db is not None:
+            try:
+                stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
+                if stats_doc and 'daily_metrics' in stats_doc:
+                    daily_metrics = stats_doc['daily_metrics']
+                    # Continue with processing
+                else:
+                    # Fall back to file if MongoDB doesn't have metrics yet
+                    stats = load_stats()
+                    daily_metrics = stats.get('commands', {}).get('daily_metrics', [])
+            except Exception as e:
+                print(f"Error loading command metrics from MongoDB: {e}")
+                # Fall back to file-based storage
+                stats = load_stats()
+                daily_metrics = stats.get('commands', {}).get('daily_metrics', [])
+        else:
+            # No MongoDB, use file-based storage
+            stats = load_stats()
+            daily_metrics = stats.get('commands', {}).get('daily_metrics', [])
         
         # Get last 7 days of data
         last_7_days = daily_metrics[-7:] if len(daily_metrics) >= 7 else daily_metrics
@@ -1351,17 +1492,94 @@ def forbidden(error):
 # Set app secret key
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
-if __name__ == '__main__':
-    # Set debug mode based on environment
-    debug_mode = os.environ.get('FLASK_ENV') == 'development'
+def sync_stats_to_mongodb():
+    """Helper function to synchronize local stats with MongoDB"""
+    if not MONGODB_AVAILABLE or db is None:
+        return False
     
-    # Get port from environment variable or default to 5000
-    port = int(os.environ.get('PORT', 5000))
-    
-    print(f"Starting Flask app on port {port}")
-    print(f"Debug mode: {debug_mode}")
-    print(f"MongoDB available: {MONGODB_AVAILABLE}")
-    print(f"Discord configured: {bool(DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET)}")
-    
-    # Run the Flask app
-    app.run(host='0.0.0.0', port=port, debug=debug_mode)
+    try:
+        # Get local stats
+        local_stats = None
+        
+        # First try in-memory stats (production mode)
+        if IS_PRODUCTION and GLOBAL_STATS:
+            local_stats = GLOBAL_STATS
+        else:
+            # Try file-based storage
+            with file_lock:
+                try:
+                    with open(stats_file, 'r') as f:
+                        content = f.read().strip()
+                        if content and content != '{}':
+                            local_stats = json.loads(content)
+                except (FileNotFoundError, json.JSONDecodeError):
+                    pass
+        
+        if not local_stats:
+            print("No local stats to sync to MongoDB")
+            return False
+            
+        # Convert to MongoDB format
+        mongo_data = {
+            "command_count": local_stats.get('commands', {}).get('total_executed', 0),
+            "daily_commands": local_stats.get('commands', {}).get('daily_count', 0),
+            "command_types": local_stats.get('commands', {}).get('command_types', {}),
+            "last_update": datetime.now().timestamp()
+        }
+        
+        # Add daily metrics if available
+        if 'daily_metrics' in local_stats.get('commands', {}):
+            mongo_data['daily_metrics'] = local_stats['commands']['daily_metrics']
+            
+        # Add guild info if available
+        if 'guilds' in local_stats:
+            mongo_data['guild_count'] = local_stats['guilds'].get('count', 0)
+            
+        # Update MongoDB with upsert to ensure document exists
+        result = db.bot_stats.update_one(
+            {"_id": "global_stats"},
+            {"$set": mongo_data},
+            upsert=True
+        )
+        
+        print(f"Synced local stats to MongoDB: {result.modified_count} documents modified")
+        return True
+    except Exception as e:
+        print(f"Error syncing stats to MongoDB: {e}")
+        return False
+
+# Run sync on startup if the file exists but MongoDB might be empty
+try:
+    if MONGODB_AVAILABLE and db is not None:
+        sync_stats_to_mongodb()
+except Exception as e:
+    print(f"Error during initial stats sync: {e}")
+
+@app.route('/api/admin/sync_stats', methods=['POST'])
+def admin_sync_stats():
+    """Admin endpoint to manually trigger a sync of stats to MongoDB"""
+    try:
+        # Check for authorization (basic security)
+        auth_header = request.headers.get('Authorization')
+        admin_key = os.environ.get('ADMIN_KEY', 'default_admin_key')  # Set this in your environment!
+        
+        if not auth_header or auth_header != f"Bearer {admin_key}":
+            return jsonify({"error": "Unauthorized"}), 401
+            
+        # Trigger the sync
+        if sync_stats_to_mongodb():
+            return jsonify({
+                "status": "success",
+                "message": "Stats synced to MongoDB"
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": "Failed to sync stats. Check logs for details."
+            }), 500
+            
+    except Exception as e:
+        print(f"Error in admin sync stats endpoint: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
