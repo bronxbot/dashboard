@@ -161,6 +161,93 @@ document.addEventListener('DOMContentLoaded', function() {
                     todayCommandsElement.dataset.count = todayCount;
                 }
                 
+                // Update latency with animation
+                const latencyElement = document.querySelector('[data-metric="latency"]');
+                if (latencyElement && data.performance && data.performance.latency !== undefined) {
+                    const newLatency = parseFloat(data.performance.latency);
+                    const currentLatency = parseFloat(latencyElement.dataset.latency || '0');
+                    
+                    if (Math.abs(newLatency - currentLatency) > 0.1) {
+                        // Animate latency change
+                        const startTime = performance.now();
+                        const difference = newLatency - currentLatency;
+                        
+                        function updateLatency(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / 500, 1);
+                            const easeProgress = 1 - Math.pow(1 - progress, 3);
+                            const currentValue = currentLatency + (difference * easeProgress);
+                            
+                            latencyElement.textContent = `${currentValue.toFixed(1)}ms`;
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(updateLatency);
+                            }
+                        }
+                        
+                        requestAnimationFrame(updateLatency);
+                        latencyElement.dataset.latency = newLatency;
+                    }
+                }
+                
+                // Update memory usage with animation
+                const memoryElement = document.querySelector('[data-metric="memory"]');
+                if (memoryElement && data.performance && data.performance.memory_usage !== undefined) {
+                    const newMemory = parseFloat(data.performance.memory_usage);
+                    const currentMemory = parseFloat(memoryElement.dataset.memory || '0');
+                    
+                    if (Math.abs(newMemory - currentMemory) > 0.1) {
+                        // Animate memory change
+                        const startTime = performance.now();
+                        const difference = newMemory - currentMemory;
+                        
+                        function updateMemory(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / 600, 1);
+                            const easeProgress = 1 - Math.pow(1 - progress, 3);
+                            const currentValue = currentMemory + (difference * easeProgress);
+                            
+                            memoryElement.textContent = `${currentValue.toFixed(1)} MB`;
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(updateMemory);
+                            }
+                        }
+                        
+                        requestAnimationFrame(updateMemory);
+                        memoryElement.dataset.memory = newMemory;
+                    }
+                }
+                
+                // Update CPU usage with animation
+                const cpuElement = document.querySelector('[data-metric="cpu"]');
+                if (cpuElement && data.performance && data.performance.cpu_usage !== undefined) {
+                    const newCpu = parseFloat(data.performance.cpu_usage);
+                    const currentCpu = parseFloat(cpuElement.dataset.cpu || '0');
+                    
+                    if (Math.abs(newCpu - currentCpu) > 0.1) {
+                        // Animate CPU change
+                        const startTime = performance.now();
+                        const difference = newCpu - currentCpu;
+                        
+                        function updateCpu(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / 700, 1);
+                            const easeProgress = 1 - Math.pow(1 - progress, 3);
+                            const currentValue = currentCpu + (difference * easeProgress);
+                            
+                            cpuElement.textContent = `${currentValue.toFixed(1)}%`;
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(updateCpu);
+                            }
+                        }
+                        
+                        requestAnimationFrame(updateCpu);
+                        cpuElement.dataset.cpu = newCpu;
+                    }
+                }
+                
                 lastStatsUpdate = Date.now();
                 
                 // Also update charts and metrics if we're on the dev dashboard

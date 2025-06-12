@@ -32,7 +32,7 @@
     </script>
     <!-- Prevent flash of unstyled content by setting theme immediately -->
     <script src="{{ url_for('static', filename='js/fouc-prevention.js') }}"></script>
-    {% include 'navbar_styles.html' %}</script>
+    {% include 'navbar_styles.html' %}
     <style>
         @keyframes spin360 {
             from { transform: rotate(0deg); }
@@ -75,13 +75,6 @@
                         <h2 class="text-[#0d141c] dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">BronxBot</h2>
                     </div>
                 </div>
-
-                <!-- Mobile hamburger button -->
-                <button id="mobile-menu-button" class="md:hidden flex items-center justify-center w-10 h-10 text-[#0d141c] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
 
                 <!-- Mobile hamburger button -->
                 <button id="mobile-menu-button" class="md:hidden flex items-center justify-center w-10 h-10 text-[#0d141c] dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
@@ -145,11 +138,6 @@
                 <div class="flex flex-col gap-4">
                     <a class="text-[#0c7ff2] dark:text-blue-400 text-sm font-medium leading-normal px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/30" href="/">Dashboard</a>
                     <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="/servers">Servers</a>
-                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="/faq">FAQ</a>
-                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
-                    <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="https://github.com/BronxBot/Dashboard">GitHub</a>
-                </div>
-            </div>
                     <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="/faq">FAQ</a>
                     <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="https://discord.gg/jENm4phpgv">Support</a>
                     <a class="text-[#0d141c] dark:text-gray-300 text-sm font-medium leading-normal px-3 py-2 rounded-lg hover:text-[#0c7ff2] dark:hover:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300" href="https://github.com/BronxBot/Dashboard">GitHub</a>
@@ -320,6 +308,7 @@
 
     <script src="{{ url_for('static', filename='js/theme-handler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui-components.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
