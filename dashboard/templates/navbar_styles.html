@@ -1,0 +1,21 @@
+<!-- Standard BronxBot Navbar Styles -->
+<style>
+    @keyframes spin360 {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .spin-360:hover {
+        animation: spin360 0.6s ease-in-out;
+    }
+    .dropdown-menu {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.3s ease;
+    }
+    .dropdown-menu.show {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+</style>

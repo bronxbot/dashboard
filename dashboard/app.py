@@ -1791,6 +1791,189 @@ def get_performance_metrics():
             'error': str(e)
         })
 
+@app.route('/api/metrics/guilds')
+def get_guild_metrics():
+    """Get guild metrics for dashboard monitoring"""
+    try:
+        guild_data = {}
+        
+        # Try to get metrics from MongoDB first
+        if MONGODB_AVAILABLE and db is not None:
+            try:
+                stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
+                if stats_doc:
+                    guild_data = {
+                        'guild_count': stats_doc.get('guild_count', 0),
+                        'guild_list': stats_doc.get('guild_list', []),
+                        'guild_details': stats_doc.get('guild_details', []),
+                        'guild_history': stats_doc.get('guild_history', []),
+                        'last_update': stats_doc.get('last_update', 0)
+                    }
+                    
+                    # Also try to get individual guild caches
+                    guild_caches = list(db.guild_cache.find({}))
+                    if guild_caches:
+                        guild_data['guild_caches'] = guild_caches
+                        
+                    # Calculate additional metrics
+                    total_members = sum(guild.get('member_count', 0) for guild in guild_data['guild_details'])
+                    guild_data['total_members'] = total_members
+                    
+                    # Get guild feature statistics
+                    feature_stats = {}
+                    for guild in guild_data['guild_details']:
+                        features = guild.get('features', [])
+                        for feature in features:
+                            feature_stats[feature] = feature_stats.get(feature, 0) + 1
+                    guild_data['feature_statistics'] = feature_stats
+                    
+                else:
+                    # Fall back to file if MongoDB doesn't have data yet
+                    stats = load_stats()
+                    guild_info = stats.get('guilds', {})
+                    guild_data = {
+                        'guild_count': guild_info.get('count', 0),
+                        'guild_list': guild_info.get('list', []),
+                        'guild_details': guild_info.get('detailed', []),
+                        'guild_history': guild_info.get('history', []),
+                        'total_members': sum(g.get('member_count', 0) for g in guild_info.get('detailed', [])),
+                        'feature_statistics': {}
+                    }
+            except Exception as e:
+                print(f"Error loading guild metrics from MongoDB: {e}")
+                # Fall back to file-based storage
+                stats = load_stats()
+                guild_info = stats.get('guilds', {})
+                guild_data = {
+                    'guild_count': guild_info.get('count', 0),
+                    'guild_list': guild_info.get('list', []),
+                    'guild_details': guild_info.get('detailed', []),
+                    'guild_history': guild_info.get('history', []),
+                    'total_members': sum(g.get('member_count', 0) for g in guild_info.get('detailed', [])),
+                    'feature_statistics': {}
+                }
+        else:
+            # No MongoDB, use file-based storage
+            stats = load_stats()
+            guild_info = stats.get('guilds', {})
+            guild_data = {
+                'guild_count': guild_info.get('count', 0),
+                'guild_list': guild_info.get('list', []),
+                'guild_details': guild_info.get('detailed', []),
+                'guild_history': guild_info.get('history', []),
+                'total_members': sum(g.get('member_count', 0) for g in guild_info.get('detailed', [])),
+                'feature_statistics': {}
+            }
+        
+        # Add timestamp
+        guild_data['timestamp'] = datetime.now().isoformat()
+        
+        return jsonify(guild_data)
+        
+    except Exception as e:
+        print(f"Error getting guild metrics: {e}")
+        import traceback
+        traceback.print_exc()
+        # Return default data
+        return jsonify({
+            'guild_count': 0,
+            'guild_list': [],
+            'guild_details': [],
+            'guild_history': [],
+            'total_members': 0,
+            'feature_statistics': {},
+            'timestamp': datetime.now().isoformat(),
+            'error': str(e)
+        })
+
+@app.route('/api/metrics/guild/<guild_id>')
+def get_individual_guild_metrics(guild_id):
+    """Get metrics for a specific guild"""
+    try:
+        guild_info = None
+        
+        # Try to get from MongoDB first
+        if MONGODB_AVAILABLE and db is not None:
+            try:
+                # Check guild cache collection
+                guild_cache = db.guild_cache.find_one({"guild_id": int(guild_id)})
+                if guild_cache:
+                    guild_info = guild_cache
+                else:
+                    # Check in global stats
+                    stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
+                    if stats_doc and 'guild_details' in stats_doc:
+                        for guild in stats_doc['guild_details']:
+                            if str(guild.get('id')) == str(guild_id):
+                                guild_info = guild
+                                break
+            except Exception as e:
+                print(f"Error loading guild from MongoDB: {e}")
+        
+        # Fall back to file storage if not found in MongoDB
+        if not guild_info:
+            stats = load_stats()
+            guild_details = stats.get('guilds', {}).get('detailed', [])
+            for guild in guild_details:
+                if str(guild.get('id')) == str(guild_id):
+                    guild_info = guild
+                    break
+        
+        if not guild_info:
+            return jsonify({'error': 'Guild not found'}), 404
+        
+        # Add timestamp
+        guild_info['timestamp'] = datetime.now().isoformat()
+        
+        return jsonify(guild_info)
+        
+    except Exception as e:
+        print(f"Error getting individual guild metrics: {e}")
+        return jsonify({'error': str(e)}), 500
+def get_individual_guild_metrics(guild_id):
+    """Get metrics for a specific guild"""
+    try:
+        guild_info = None
+        
+        # Try to get from MongoDB first
+        if MONGODB_AVAILABLE and db is not None:
+            try:
+                # Check guild cache collection
+                guild_cache = db.guild_cache.find_one({"guild_id": int(guild_id)})
+                if guild_cache:
+                    guild_info = guild_cache
+                else:
+                    # Check in global stats
+                    stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
+                    if stats_doc and 'guild_details' in stats_doc:
+                        for guild in stats_doc['guild_details']:
+                            if str(guild.get('id')) == str(guild_id):
+                                guild_info = guild
+                                break
+            except Exception as e:
+                print(f"Error loading guild from MongoDB: {e}")
+        
+        # Fall back to file storage if not found in MongoDB
+        if not guild_info:
+            stats = load_stats()
+            guild_details = stats.get('guilds', {}).get('detailed', [])
+            for guild in guild_details:
+                if str(guild.get('id')) == str(guild_id):
+                    guild_info = guild
+                    break
+        
+        if not guild_info:
+            return jsonify({'error': 'Guild not found'}), 404
+        
+        # Add timestamp
+        guild_info['timestamp'] = datetime.now().isoformat()
+        
+        return jsonify(guild_info)
+        
+    except Exception as e:
+        print(f"Error getting individual guild metrics: {e}")
+        return jsonify({'error': str(e)}), 500
+
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
