@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import threading
 import fcntl  # For file locking
+import traceback  # For error tracing
 
 
 # Load environment variables from .env file
@@ -197,6 +198,47 @@ def save_stats(stats):
                 except:
                     pass
             return False
+
+def update_production_stats():
+    """Update stats in production mode to simulate real-time data"""
+    global GLOBAL_STATS
+    
+    if not IS_PRODUCTION:
+        return
+    
+    # Simulate gradual command count increases
+    current_total = GLOBAL_STATS['commands']['total_executed']
+    GLOBAL_STATS['commands']['total_executed'] = current_total + 1
+    
+    # Update today's metrics
+    today = datetime.now().strftime('%Y-%m-%d')
+    daily_metrics = GLOBAL_STATS['commands']['daily_metrics']
+    
+    # Find today's entry or create it
+    today_entry = None
+    for metric in daily_metrics:
+        if metric.get('date') == today:
+            today_entry = metric
+            break
+    
+    if today_entry:
+        today_entry['count'] += 1
+        today_entry['timestamp'] = datetime.now().isoformat()
+    else:
+        # Add today's entry
+        new_entry = {
+            "date": today,
+            "count": 1,
+            "timestamp": datetime.now().isoformat()
+        }
+        daily_metrics.append(new_entry)
+        
+        # Keep only last 14 days
+        if len(daily_metrics) > 14:
+            daily_metrics.pop(0)
+    
+    # Update last_updated timestamp
+    GLOBAL_STATS['last_updated'] = datetime.now().isoformat()
 
 def get_guild_settings(guild_id: str):
     """Get guild settings synchronously with error handling"""
@@ -1323,44 +1365,3 @@ if __name__ == '__main__':
     
     # Run the Flask app
     app.run(host='0.0.0.0', port=port, debug=debug_mode)
-
-def update_production_stats():
-    """Update stats in production mode to simulate real-time data"""
-    global GLOBAL_STATS
-    
-    if not IS_PRODUCTION:
-        return
-    
-    # Simulate gradual command count increases
-    current_total = GLOBAL_STATS['commands']['total_executed']
-    GLOBAL_STATS['commands']['total_executed'] = current_total + 1
-    
-    # Update today's metrics
-    today = datetime.now().strftime('%Y-%m-%d')
-    daily_metrics = GLOBAL_STATS['commands']['daily_metrics']
-    
-    # Find today's entry or create it
-    today_entry = None
-    for metric in daily_metrics:
-        if metric.get('date') == today:
-            today_entry = metric
-            break
-    
-    if today_entry:
-        today_entry['count'] += 1
-        today_entry['timestamp'] = datetime.now().isoformat()
-    else:
-        # Add today's entry
-        new_entry = {
-            "date": today,
-            "count": 1,
-            "timestamp": datetime.now().isoformat()
-        }
-        daily_metrics.append(new_entry)
-        
-        # Keep only last 14 days
-        if len(daily_metrics) > 14:
-            daily_metrics.pop(0)
-    
-    # Update last_updated timestamp
-    GLOBAL_STATS['last_updated'] = datetime.now().isoformat()
