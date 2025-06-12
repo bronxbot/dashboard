@@ -31,7 +31,7 @@ A clean, modern dashboard for configuring BronxBot across your Discord servers. 
 3. Set up your environment variables
 4. Run: `python wsgi.py` or `gunicorn -c gunicorn_config.py wsgi:app`
 
-## ⚙️ Configuration
+## Configuration
 
 Set these environment variables:
 
@@ -49,7 +49,7 @@ SECRET_KEY=your_flask_secret_key
 - **MongoDB** - Database
 - **Discord OAuth** - Authentication
 - **Gunicorn** - WSGI HTTP Server
-- **Bootstrap/CSS** - Frontend styling
+- **Tailwind/CSS** - Frontend styling
 
 ## Project Structure
 
