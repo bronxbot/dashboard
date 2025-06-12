@@ -31,18 +31,7 @@
         }
     </script>
     <!-- Prevent flash of unstyled content by setting theme immediately -->
-    <script>
-        (function() {
-            try {
-                const theme = localStorage.getItem('theme') || 'light';
-                if (theme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                }
-            } catch (e) {
-                // Fallback for environments without localStorage
-            }
-        })();
-    </script>
+    <script src="{{ url_for('static', filename='js/fouc-prevention.js') }}"></script>
     <style>
         @keyframes spin360 {
             from { transform: rotate(0deg); }
@@ -594,37 +583,11 @@
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='js/theme-handler.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-components.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        // Mobile menu toggle
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        if (mobileMenuButton && mobileMenu) {
-            mobileMenuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
-
-        // User dropdown functionality
-        const userDropdownToggle = document.getElementById('user-dropdown-toggle');
-        const userDropdownMenu = document.getElementById('user-dropdown-menu');
-
-        if (userDropdownToggle && userDropdownMenu) {
-            userDropdownToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
-                userDropdownMenu.classList.toggle('show');
-            });
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!userDropdownToggle.contains(e.target) && !userDropdownMenu.contains(e.target)) {
-                    userDropdownMenu.classList.remove('show');
-                }
-            });
-        }
-
-        // Hero background cursor tracking
+        // Hero background cursor tracking (home-specific)
         const hero = document.getElementById('hero-background');
         const cursorOverlay = document.getElementById('cursor-overlay');
 
