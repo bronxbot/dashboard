@@ -365,16 +365,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Dark/Light mode toggle functionality
+    // Dark/Light mode toggle functionality with improved deployment compatibility
     const themeToggle = document.getElementById('theme-toggle');
     const sunIcon = document.getElementById('sun-icon');
     const moonIcon = document.getElementById('moon-icon');
     
-    // Check for saved theme preference or default to light mode
-    const currentTheme = localStorage.getItem('theme') || 'light';
+    // Function to get theme preference with fallback
+    function getThemePreference() {
+        try {
+            return localStorage.getItem('theme') || 'light';
+        } catch (e) {
+            // Fallback for environments where localStorage might not be available
+            console.warn('localStorage not available, using light theme');
+            return 'light';
+        }
+    }
+    
+    // Function to save theme preference
+    function saveThemePreference(theme) {
+        try {
+            localStorage.setItem('theme', theme);
+        } catch (e) {
+            console.warn('Unable to save theme preference to localStorage');
+        }
+    }
     
     // Function to update hero background theme
     function updateHeroTheme(isDark) {
+        const heroBackground = document.getElementById('hero-background');
         if (heroBackground) {
             if (isDark) {
                 heroBackground.classList.remove('light-theme');
@@ -386,18 +404,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Apply the theme on page load
-    if (currentTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-        if (sunIcon) sunIcon.classList.add('hidden');
-        if (moonIcon) moonIcon.classList.remove('hidden');
-        updateHeroTheme(true);
-    } else {
-        document.documentElement.classList.remove('dark');
-        if (sunIcon) sunIcon.classList.remove('hidden');
-        if (moonIcon) moonIcon.classList.add('hidden');
-        updateHeroTheme(false);
+    // Function to apply theme
+    function applyTheme(isDark) {
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+            if (sunIcon) sunIcon.classList.add('hidden');
+            if (moonIcon) moonIcon.classList.remove('hidden');
+        } else {
+            document.documentElement.classList.remove('dark');
+            if (sunIcon) sunIcon.classList.remove('hidden');
+            if (moonIcon) moonIcon.classList.add('hidden');
+        }
+        updateHeroTheme(isDark);
     }
+    
+    // Initialize theme on page load
+    function initializeTheme() {
+        const currentTheme = getThemePreference();
+        const isDark = currentTheme === 'dark';
+        applyTheme(isDark);
+    }
+    
+    // Initialize theme immediately to prevent flash
+    initializeTheme();
     
     // Toggle theme when button is clicked
     if (themeToggle) {
@@ -419,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateHeroTheme(isDark);
             
             // Save theme preference
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            saveThemePreference(isDark ? 'dark' : 'light');
         });
     }
 });

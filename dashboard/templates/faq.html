@@ -23,6 +23,19 @@
             darkMode: 'class',
         }
     </script>
+    <!-- Prevent flash of unstyled content by setting theme immediately -->
+    <script>
+        (function() {
+            try {
+                const theme = localStorage.getItem('theme') || 'light';
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                }
+            } catch (e) {
+                // Fallback for environments without localStorage
+            }
+        })();
+    </script>
     
     <style>
         /* Avatar dropdown styles */
