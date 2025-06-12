@@ -82,8 +82,14 @@ GLOBAL_STATS = {
 }
 
 # Log the storage mode being used
-print(f"Dashboard storage mode: {'PRODUCTION (MongoDB)' if IS_PRODUCTION else 'DEVELOPMENT (file-based)'}")
+storage_mode = 'PRODUCTION (MongoDB + In-Memory)' if IS_PRODUCTION else 'DEVELOPMENT (file-based)'
+print(f"Dashboard storage mode: {storage_mode}")
 print(f"FLASK_ENV: {os.environ.get('FLASK_ENV', 'not set')}")
+print(f"MongoDB available: {MONGODB_AVAILABLE}")
+if MONGODB_AVAILABLE:
+    print("Features enabled: Real-time stats, Performance metrics, User tracking, Persistent storage")
+else:
+    print("Features enabled: Basic stats only (file-based fallback)")
 
 # File locking mechanism
 file_lock = threading.Lock()
@@ -116,20 +122,49 @@ def load_stats():
                 mongo_stats["commands"]["daily_count"] = stats_doc.get("daily_commands", 0)
                 mongo_stats["commands"]["command_types"] = stats_doc.get("command_types", {})
                 
+                # Load daily metrics from MongoDB if available
+                if "daily_metrics" in stats_doc:
+                    mongo_stats["commands"]["daily_metrics"] = stats_doc["daily_metrics"]
+                
                 # Update last_updated timestamp
                 if "last_update" in stats_doc:
                     mongo_stats["last_updated"] = datetime.fromtimestamp(
                         stats_doc["last_update"]).isoformat()
                 
-                # Load guild information if available in stats_doc or merge with existing data
-                if "guilds" in GLOBAL_STATS:
-                    mongo_stats["guilds"] = GLOBAL_STATS["guilds"]
+                # Load guild information from MongoDB or use existing data
+                if "guild_count" in stats_doc:
+                    mongo_stats["guilds"]["count"] = stats_doc["guild_count"]
+                if "guild_list" in stats_doc:
+                    mongo_stats["guilds"]["list"] = stats_doc["guild_list"]
+                if "guild_details" in stats_doc:
+                    mongo_stats["guilds"]["detailed"] = stats_doc["guild_details"]
+                if "guild_history" in stats_doc:
+                    mongo_stats["guilds"]["history"] = stats_doc["guild_history"]
                 
-                # Load performance data if available or use default
-                mongo_stats["performance"] = GLOBAL_STATS.get("performance", default_stats["performance"])
+                # Load performance data from MongoDB
+                if "user_count" in stats_doc:
+                    mongo_stats["performance"]["user_count"] = stats_doc["user_count"]
+                if "latency" in stats_doc:
+                    mongo_stats["performance"]["latency"] = stats_doc["latency"]
+                if "shard_count" in stats_doc:
+                    mongo_stats["performance"]["shard_count"] = stats_doc["shard_count"]
+                if "memory_usage" in stats_doc:
+                    mongo_stats["performance"]["memory_usage"] = stats_doc["memory_usage"]
+                if "cpu_usage" in stats_doc:
+                    mongo_stats["performance"]["cpu_usage"] = stats_doc["cpu_usage"]
                 
-                # Update uptime if available or use default
-                mongo_stats["uptime"] = GLOBAL_STATS.get("uptime", default_stats["uptime"])
+                # Load uptime data from MongoDB
+                if "uptime_start" in stats_doc:
+                    mongo_stats["uptime"]["start_time"] = stats_doc["uptime_start"]
+                if "uptime_seconds" in stats_doc:
+                    uptime_seconds = stats_doc["uptime_seconds"]
+                    days, remainder = divmod(uptime_seconds, 86400)
+                    hours, remainder = divmod(remainder, 3600)
+                    minutes, _ = divmod(remainder, 60)
+                    mongo_stats["uptime"]["days"] = int(days)
+                    mongo_stats["uptime"]["hours"] = int(hours)
+                    mongo_stats["uptime"]["minutes"] = int(minutes)
+                    mongo_stats["uptime"]["total_seconds"] = uptime_seconds
                 
                 # Merge with GLOBAL_STATS for any missing fields
                 for key in default_stats:
@@ -227,13 +262,27 @@ def save_stats(stats):
             
             # Add daily metrics if available
             if 'daily_metrics' in stats.get('commands', {}):
-                # Convert datetime strings to timestamps for MongoDB
                 mongo_data['daily_metrics'] = stats['commands']['daily_metrics']
                 
-            # Add guild info if available
+            # Add comprehensive guild info if available
             if 'guilds' in stats:
                 mongo_data['guild_count'] = stats['guilds'].get('count', 0)
-                # Only store minimal guild info to avoid excessive document size
+                mongo_data['guild_list'] = stats['guilds'].get('list', [])
+                mongo_data['guild_details'] = stats['guilds'].get('detailed', [])
+                mongo_data['guild_history'] = stats['guilds'].get('history', [])
+                
+            # Add performance metrics if available
+            if 'performance' in stats:
+                mongo_data['user_count'] = stats['performance'].get('user_count', 0)
+                mongo_data['latency'] = stats['performance'].get('latency', 0)
+                mongo_data['shard_count'] = stats['performance'].get('shard_count', 1)
+                mongo_data['memory_usage'] = stats['performance'].get('memory_usage', 0)
+                mongo_data['cpu_usage'] = stats['performance'].get('cpu_usage', 0)
+                
+            # Add uptime data if available
+            if 'uptime' in stats:
+                mongo_data['uptime_start'] = stats['uptime'].get('start_time', time.time())
+                mongo_data['uptime_seconds'] = stats['uptime'].get('total_seconds', 0)
                 
             # Upsert to MongoDB - use _id as "global_stats" to make it a singleton document
             db.bot_stats.update_one(
@@ -324,7 +373,20 @@ def update_production_stats():
                     "daily_commands": 1
                 },
                 "$set": {
-                    "last_update": datetime.now().timestamp()
+                    "last_update": datetime.now().timestamp(),
+                    # Update performance metrics
+                    "user_count": GLOBAL_STATS.get('performance', {}).get('user_count', 0),
+                    "latency": GLOBAL_STATS.get('performance', {}).get('latency', 0),
+                    "shard_count": GLOBAL_STATS.get('performance', {}).get('shard_count', 1),
+                    "memory_usage": GLOBAL_STATS.get('performance', {}).get('memory_usage', 0),
+                    "cpu_usage": GLOBAL_STATS.get('performance', {}).get('cpu_usage', 0),
+                    # Update guild metrics
+                    "guild_count": GLOBAL_STATS.get('guilds', {}).get('count', 0),
+                    "guild_list": GLOBAL_STATS.get('guilds', {}).get('list', []),
+                    "guild_details": GLOBAL_STATS.get('guilds', {}).get('detailed', []),
+                    # Update uptime
+                    "uptime_start": GLOBAL_STATS.get('uptime', {}).get('start_time', time.time()),
+                    "uptime_seconds": GLOBAL_STATS.get('uptime', {}).get('total_seconds', 0)
                 }
             }
             
@@ -521,11 +583,14 @@ def api_stats():
             if 'guilds' in data:
                 bot_stats['server_count'] = data['guilds'].get('count', 0)
                 bot_stats['guilds'] = data['guilds'].get('list', [])
+                bot_stats['guild_details'] = data['guilds'].get('detailed', [])
             
             if 'performance' in data:
                 bot_stats['user_count'] = data['performance'].get('user_count', 0)
                 bot_stats['latency'] = data['performance'].get('latency', 0)
                 bot_stats['shard_count'] = data['performance'].get('shard_count', 1)
+                bot_stats['memory_usage'] = data['performance'].get('memory_usage', 0)
+                bot_stats['cpu_usage'] = data['performance'].get('cpu_usage', 0)
             
             # Handle command metrics and store in data/stats.json
             if 'commands' in data:
@@ -549,11 +614,15 @@ def api_stats():
                         "days": data['uptime'].get('days', 0),
                         "hours": data['uptime'].get('hours', 0),
                         "minutes": data['uptime'].get('minutes', 0),
+                        "total_seconds": data['uptime'].get('total_seconds', 0),
                         "start_time": data['uptime'].get('start_time', time.time())
                     }
                 
                 if 'guilds' in data:
                     existing_stats['guilds']['count'] = data['guilds'].get('count', 0)
+                    existing_stats['guilds']['list'] = data['guilds'].get('list', [])
+                    existing_stats['guilds']['detailed'] = data['guilds'].get('detailed', [])
+                    
                     # Add to history if it's a new day or significant change
                     today = datetime.now().strftime('%Y-%m-%d')
                     if not existing_stats['guilds']['history'] or \
@@ -566,6 +635,17 @@ def api_stats():
                         # Keep only last 30 days
                         if len(existing_stats['guilds']['history']) > 30:
                             existing_stats['guilds']['history'] = existing_stats['guilds']['history'][-30:]
+                
+                if 'performance' in data:
+                    if 'performance' not in existing_stats:
+                        existing_stats['performance'] = {}
+                    existing_stats['performance'].update({
+                        'user_count': data['performance'].get('user_count', 0),
+                        'latency': data['performance'].get('latency', 0),
+                        'shard_count': data['performance'].get('shard_count', 1),
+                        'memory_usage': data['performance'].get('memory_usage', 0),
+                        'cpu_usage': data['performance'].get('cpu_usage', 0)
+                    })
                 
                 if 'commands' in data:
                     if 'total_executed' in data['commands']:
@@ -1296,6 +1376,69 @@ async def invite():
         return "Discord configuration not set up", 503
     return redirect(f'https://discord.com/oauth2/authorize?client_id={DISCORD_CLIENT_ID}&permissions=10140354735863&response_type=code&redirect_uri={DISCORD_REDIRECT_URI}&integration_type=0&scope=identify+guilds+bot+applications.commands.permissions.update+applications.commands')
 
+@app.route('/api/stats/performance', methods=['POST'])
+def performance_stats_update():
+    """Handle real-time performance updates from bot"""
+    try:
+        data = request.get_json()
+        
+        if not data or data.get('type') != 'performance_update':
+            return jsonify({"error": "Invalid performance update data"}), 400
+        
+        # Handle MongoDB direct update if available
+        if MONGODB_AVAILABLE and db is not None:
+            try:
+                # Update performance metrics in MongoDB
+                update_data = {
+                    "$set": {
+                        "latency": data.get('latency', 0),
+                        "memory_usage": data.get('memory_usage', 0),
+                        "cpu_usage": data.get('cpu_usage', 0),
+                        "guild_count": data.get('guild_count', 0),
+                        "user_count": data.get('user_count', 0),
+                        "cached_users": data.get('cached_users', 0),
+                        "last_performance_update": data.get('timestamp', time.time())
+                    }
+                }
+                
+                # Update MongoDB
+                db.bot_stats.update_one(
+                    {"_id": "global_stats"},
+                    update_data,
+                    upsert=True
+                )
+                
+            except Exception as e:
+                print(f"Error updating performance metrics in MongoDB: {e}")
+        
+        # Update global stats if in production mode
+        if IS_PRODUCTION and GLOBAL_STATS:
+            GLOBAL_STATS['performance'].update({
+                'latency': data.get('latency', 0),
+                'memory_usage': data.get('memory_usage', 0),
+                'cpu_usage': data.get('cpu_usage', 0),
+                'user_count': data.get('user_count', 0),
+                'cached_users': data.get('cached_users', 0)
+            })
+            GLOBAL_STATS['guilds']['count'] = data.get('guild_count', 0)
+            GLOBAL_STATS['last_updated'] = datetime.now().isoformat()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Performance metrics updated",
+            "updated_metrics": {
+                "latency": data.get('latency', 0),
+                "memory_usage": data.get('memory_usage', 0),
+                "cpu_usage": data.get('cpu_usage', 0),
+                "guild_count": data.get('guild_count', 0),
+                "user_count": data.get('user_count', 0)
+            }
+        })
+        
+    except Exception as e:
+        print(f"Error in performance stats update: {e}")
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/stats/realtime', methods=['POST'])
 def realtime_stats_update():
     """Handle real-time command execution updates from bot"""
@@ -1327,6 +1470,34 @@ def realtime_stats_update():
                 # Update command type counter if command name provided
                 if command_name:
                     update_data["$inc"][f"command_types.{command_name}"] = 1
+                
+                # Update performance metrics if provided
+                if 'performance' in data:
+                    perf_data = data['performance']
+                    update_data["$set"].update({
+                        "user_count": perf_data.get('user_count', 0),
+                        "latency": perf_data.get('latency', 0),
+                        "shard_count": perf_data.get('shard_count', 1),
+                        "memory_usage": perf_data.get('memory_usage', 0),
+                        "cpu_usage": perf_data.get('cpu_usage', 0)
+                    })
+                
+                # Update guild metrics if provided
+                if 'guilds' in data:
+                    guild_data = data['guilds']
+                    update_data["$set"].update({
+                        "guild_count": guild_data.get('count', 0),
+                        "guild_list": guild_data.get('list', []),
+                        "guild_details": guild_data.get('detailed', [])
+                    })
+                
+                # Update uptime if provided
+                if 'uptime' in data:
+                    uptime_data = data['uptime']
+                    update_data["$set"].update({
+                        "uptime_start": uptime_data.get('start_time', time.time()),
+                        "uptime_seconds": uptime_data.get('total_seconds', 0)
+                    })
                 
                 # Update MongoDB
                 db.bot_stats.update_one(
@@ -1524,6 +1695,102 @@ def get_command_metrics():
             'command_types': {}
         })
 
+@app.route('/api/metrics/performance')
+def get_performance_metrics():
+    """Get performance metrics for monitoring"""
+    try:
+        # Initialize variables
+        performance_data = {}
+        
+        # Try to get metrics from MongoDB first
+        if MONGODB_AVAILABLE and db is not None:
+            try:
+                stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
+                if stats_doc:
+                    performance_data = {
+                        'user_count': stats_doc.get('user_count', 0),
+                        'latency': stats_doc.get('latency', 0),
+                        'shard_count': stats_doc.get('shard_count', 1),
+                        'memory_usage': stats_doc.get('memory_usage', 0),
+                        'cpu_usage': stats_doc.get('cpu_usage', 0),
+                        'guild_count': stats_doc.get('guild_count', 0),
+                        'uptime_seconds': stats_doc.get('uptime_seconds', 0),
+                        'last_update': stats_doc.get('last_update', 0)
+                    }
+                else:
+                    # Fall back to file if MongoDB doesn't have data yet
+                    stats = load_stats()
+                    performance_data = {
+                        'user_count': stats.get('performance', {}).get('user_count', 0),
+                        'latency': stats.get('performance', {}).get('latency', 0),
+                        'shard_count': stats.get('performance', {}).get('shard_count', 1),
+                        'memory_usage': stats.get('performance', {}).get('memory_usage', 0),
+                        'cpu_usage': stats.get('performance', {}).get('cpu_usage', 0),
+                        'guild_count': stats.get('guilds', {}).get('count', 0),
+                        'uptime_seconds': stats.get('uptime', {}).get('total_seconds', 0)
+                    }
+            except Exception as e:
+                print(f"Error loading performance metrics from MongoDB: {e}")
+                # Fall back to file-based storage
+                stats = load_stats()
+                performance_data = {
+                    'user_count': stats.get('performance', {}).get('user_count', 0),
+                    'latency': stats.get('performance', {}).get('latency', 0),
+                    'shard_count': stats.get('performance', {}).get('shard_count', 1),
+                    'memory_usage': stats.get('performance', {}).get('memory_usage', 0),
+                    'cpu_usage': stats.get('performance', {}).get('cpu_usage', 0),
+                    'guild_count': stats.get('guilds', {}).get('count', 0),
+                    'uptime_seconds': stats.get('uptime', {}).get('total_seconds', 0)
+                }
+        else:
+            # No MongoDB, use file-based storage
+            stats = load_stats()
+            performance_data = {
+                'user_count': stats.get('performance', {}).get('user_count', 0),
+                'latency': stats.get('performance', {}).get('latency', 0),
+                'shard_count': stats.get('performance', {}).get('shard_count', 1),
+                'memory_usage': stats.get('performance', {}).get('memory_usage', 0),
+                'cpu_usage': stats.get('performance', {}).get('cpu_usage', 0),
+                'guild_count': stats.get('guilds', {}).get('count', 0),
+                'uptime_seconds': stats.get('uptime', {}).get('total_seconds', 0)
+            }
+        
+        # Calculate uptime in human readable format
+        uptime_seconds = performance_data.get('uptime_seconds', 0)
+        days, remainder = divmod(uptime_seconds, 86400)
+        hours, remainder = divmod(remainder, 3600)
+        minutes, _ = divmod(remainder, 60)
+        
+        performance_data['uptime_formatted'] = {
+            'days': int(days),
+            'hours': int(hours),
+            'minutes': int(minutes),
+            'total_seconds': uptime_seconds
+        }
+        
+        # Add timestamp
+        performance_data['timestamp'] = datetime.now().isoformat()
+        
+        return jsonify(performance_data)
+        
+    except Exception as e:
+        print(f"Error getting performance metrics: {e}")
+        import traceback
+        traceback.print_exc()
+        # Return default data
+        return jsonify({
+            'user_count': 0,
+            'latency': 0,
+            'shard_count': 1,
+            'memory_usage': 0,
+            'cpu_usage': 0,
+            'guild_count': 0,
+            'uptime_seconds': 0,
+            'uptime_formatted': {'days': 0, 'hours': 0, 'minutes': 0, 'total_seconds': 0},
+            'timestamp': datetime.now().isoformat(),
+            'error': str(e)
+        })
+
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
@@ -1591,9 +1858,25 @@ def sync_stats_to_mongodb():
         if 'daily_metrics' in local_stats.get('commands', {}):
             mongo_data['daily_metrics'] = local_stats['commands']['daily_metrics']
             
-        # Add guild info if available
+        # Add comprehensive guild info if available
         if 'guilds' in local_stats:
             mongo_data['guild_count'] = local_stats['guilds'].get('count', 0)
+            mongo_data['guild_list'] = local_stats['guilds'].get('list', [])
+            mongo_data['guild_details'] = local_stats['guilds'].get('detailed', [])
+            mongo_data['guild_history'] = local_stats['guilds'].get('history', [])
+            
+        # Add performance metrics if available
+        if 'performance' in local_stats:
+            mongo_data['user_count'] = local_stats['performance'].get('user_count', 0)
+            mongo_data['latency'] = local_stats['performance'].get('latency', 0)
+            mongo_data['shard_count'] = local_stats['performance'].get('shard_count', 1)
+            mongo_data['memory_usage'] = local_stats['performance'].get('memory_usage', 0)
+            mongo_data['cpu_usage'] = local_stats['performance'].get('cpu_usage', 0)
+            
+        # Add uptime data if available
+        if 'uptime' in local_stats:
+            mongo_data['uptime_start'] = local_stats['uptime'].get('start_time', time.time())
+            mongo_data['uptime_seconds'] = local_stats['uptime'].get('total_seconds', 0)
             
         # Update MongoDB with upsert to ensure document exists
         result = db.bot_stats.update_one(
@@ -1624,7 +1907,7 @@ def admin_sync_stats():
         admin_key = os.environ.get('ADMIN_KEY', 'default_admin_key')  # Set this in your environment!
         
         if not auth_header or auth_header != f"Bearer {admin_key}":
-            return jsonify({"error": "Unauthorized"}), 401
+                       return jsonify({"error": "Unauthorized"}), 401
             
         # Trigger the sync
         if sync_stats_to_mongodb():
