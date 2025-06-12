@@ -727,6 +727,27 @@ def api_test():
         'discord_configured': bool(DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET)
     })
 
+@app.route('/api/test/production-stats')
+def test_production_stats():
+    """Test endpoint to simulate command execution in production mode"""
+    if IS_PRODUCTION:
+        # Simulate a command execution
+        update_production_stats()
+        stats = load_stats()
+        return jsonify({
+            'message': 'Production stats updated',
+            'storage_mode': 'production (in-memory)',
+            'total_commands': stats['commands']['total_executed'],
+            'timestamp': datetime.now().isoformat()
+        })
+    else:
+        return jsonify({
+            'message': 'Not in production mode',
+            'storage_mode': 'development (file-based)',
+            'flask_env': os.environ.get('FLASK_ENV', 'not set'),
+            'timestamp': datetime.now().isoformat()
+        })
+
 @app.route('/privacy')
 @app.route('/PRIVACY')
 def privacy():
