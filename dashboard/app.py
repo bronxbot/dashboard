@@ -892,12 +892,48 @@ def get_user_guilds(access_token):
     return []
 
 def get_bot_guilds():
-    """Fetch bot's server list from stats"""
+    """Fetch bot's server list from MongoDB guild_list or fallback to stats"""
+    # First try to get from MongoDB
+    if MONGODB_AVAILABLE and db is not None:
+        try:
+            stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
+            if stats_doc and "guild_list" in stats_doc:
+                return stats_doc["guild_list"]
+        except Exception as e:
+            print(f"Error fetching guild_list from MongoDB: {e}")
+    
+    # Fallback to bot_stats or file-based storage
     global bot_stats
-    return bot_stats.get('guilds', [])
+    if bot_stats and 'guilds' in bot_stats:
+        if isinstance(bot_stats['guilds'], dict):
+            return bot_stats['guilds'].get('list', [])
+        else:
+            return bot_stats.get('guilds', [])
+    
+    # Final fallback - try to load from file
+    try:
+        stats = load_stats()
+        guilds_data = stats.get('guilds', {})
+        if isinstance(guilds_data, dict):
+            return guilds_data.get('list', [])
+        else:
+            return []
+    except Exception as e:
+        print(f"Error loading guild list from file: {e}")
+        return []
 
 def get_bot_guild_details():
-    """Fetch detailed bot guild data from stats file"""
+    """Fetch detailed bot guild data from MongoDB or fallback to stats file"""
+    # First try to get from MongoDB
+    if MONGODB_AVAILABLE and db is not None:
+        try:
+            stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
+            if stats_doc and "guild_details" in stats_doc:
+                return stats_doc["guild_details"]
+        except Exception as e:
+            print(f"Error fetching guild details from MongoDB: {e}")
+    
+    # Fallback to file-based storage
     try:
         stats = load_stats()
         return stats.get('guilds', {}).get('detailed', [])
@@ -1027,6 +1063,11 @@ def servers():
     bot_guilds = get_bot_guilds()
     bot_guild_details = get_bot_guild_details()
     
+    # Debug logging
+    print(f"DEBUG: Found {len(bot_guilds)} bot guilds: {bot_guilds[:5]}...")  # Show first 5 for debugging
+    print(f"DEBUG: Found {len(user_guilds)} user guilds")
+    print(f"DEBUG: Bot guild details count: {len(bot_guild_details)}")
+    
     # Create a lookup dictionary for bot guild details
     bot_guild_lookup = {detail['id']: detail for detail in bot_guild_details}
     
@@ -1039,8 +1080,20 @@ def servers():
     # Mark guilds where bot is present and add icon URLs and member counts
     for guild in manage_guilds:
         guild_id = str(guild['id'])
-        guild['bot_present'] = guild_id in bot_guilds
+        
+        # Enhanced bot presence detection - handle both string and int IDs
+        guild['bot_present'] = (
+            guild_id in bot_guilds or 
+            int(guild_id) in bot_guilds or  # In case bot_guilds contains integers
+            str(guild_id) in [str(g) for g in bot_guilds]  # Convert all to strings for comparison
+        )
+        
         guild['icon_url'] = f"https://cdn.discordapp.com/icons/{guild['id']}/{guild['icon']}.png" if guild['icon'] else None
+        
+        # Debug for first few guilds
+        if len([g for g in manage_guilds if g.get('processed')]) < 3:  # Debug first 3
+            print(f"DEBUG: Guild {guild['name']} ({guild_id}) - Bot present: {guild['bot_present']}")
+            guild['processed'] = True
         
         # Add member count from bot data if available
         if guild_id in bot_guild_lookup:
@@ -1056,6 +1109,9 @@ def servers():
     
     # Sort guilds to show bot-present servers first
     manage_guilds.sort(key=lambda g: (not g['bot_present'], g['name'].lower()))
+    
+    print(f"DEBUG: Total manageable guilds: {len(manage_guilds)}")
+    print(f"DEBUG: Bot present guilds: {len([g for g in manage_guilds if g['bot_present']])}")
     
     return render_template('servers.html', 
         guilds=manage_guilds,
@@ -1323,6 +1379,56 @@ def admin_dashboard():
                              error_code=500,
                              error_message="Failed to load admin dashboard",
                              username=request.cookies.get('username')), 500
+
+@app.route('/debug/mongodb')
+def debug_mongodb():
+    """Debug endpoint to check MongoDB guild data"""
+    if not MONGODB_AVAILABLE or db is None:
+        return jsonify({'error': 'MongoDB not available'}), 500
+    
+    try:
+        stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
+        
+        if not stats_doc:
+            return jsonify({'error': 'No global_stats document found in MongoDB'})
+        
+        debug_info = {
+            'mongodb_connected': True,
+            'document_found': True,
+            'fields_available': list(stats_doc.keys()),
+            'guild_list_present': 'guild_list' in stats_doc,
+            'guild_details_present': 'guild_details' in stats_doc,
+            'guild_count': len(stats_doc.get('guild_list', [])),
+            'sample_guild_ids': stats_doc.get('guild_list', [])[:5],  # First 5 for debugging
+            'last_update': stats_doc.get('last_update'),
+            'updated_at': str(stats_doc.get('updated_at'))
+        }
+        
+        return jsonify(debug_info)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/bot/guilds')
+def get_bot_guilds_api():
+    """API endpoint to check bot guild detection"""
+    try:
+        bot_guilds = get_bot_guilds()
+        bot_guild_details = get_bot_guild_details()
+        
+        return jsonify({
+            'success': True,
+            'guild_count': len(bot_guilds),
+            'guild_list': bot_guilds[:10],  # First 10 for debugging
+            'detailed_count': len(bot_guild_details),
+            'mongodb_available': MONGODB_AVAILABLE,
+            'detection_method': 'mongodb' if (MONGODB_AVAILABLE and db is not None) else 'fallback'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'mongodb_available': MONGODB_AVAILABLE
+        }), 500
 
 @app.route('/api/guild/<guild_id>/stats')
 @login_required

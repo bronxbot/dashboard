@@ -59,6 +59,28 @@
             animation: flash 0.8s ease-in-out;
         }
         
+        /* Performance metric styling */
+        .stat-card[data-metric="latency"] {
+            border-left: 4px solid #10b981; /* Green for latency */
+        }
+        
+        .stat-card[data-metric="memory"] {
+            border-left: 4px solid #f59e0b; /* Orange for memory */
+        }
+        
+        .stat-card[data-metric="cpu"] {
+            border-left: 4px solid #ef4444; /* Red for CPU */
+        }
+        
+        /* Performance metric icons */
+        .performance-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        
         /* Chart styling for better proportions */
         .chart-container {
             position: relative;
@@ -241,6 +263,36 @@
                     <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">Total Commands Executed</p>
                     <p id="total-commands" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-count="{% if stats and stats.commands %}{{ stats.commands.total_executed }}{% else %}0{% endif %}">
                         {% if stats and stats.commands %}{{ stats.commands.total_executed | thousands }}{% else %}0{% endif %}<span class="stats-indicator"></span>
+                    </p>
+                </div>
+                <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+                    <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">Total Users</p>
+                    <p id="user-count" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-count="{% if stats and stats.performance %}{{ stats.performance.user_count }}{% else %}0{% endif %}">
+                        {% if stats and stats.performance %}{{ stats.performance.user_count | thousands }}{% else %}0{% endif %}<span class="stats-indicator"></span>
+                    </p>
+                </div>
+                <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" data-metric="latency">
+                    <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">
+                        Latency
+                    </p>
+                    <p class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-metric="latency" data-latency="{% if stats and stats.performance %}{{ stats.performance.latency }}{% else %}0{% endif %}">
+                        {% if stats and stats.performance %}{{ stats.performance.latency }}{% else %}0{% endif %}ms<span class="stats-indicator"></span>
+                    </p>
+                </div>
+                <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" data-metric="memory">
+                    <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">
+                        Memory Usage
+                    </p>
+                    <p class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-metric="memory" data-memory="{% if stats and stats.performance %}{{ stats.performance.memory_usage }}{% else %}0{% endif %}">
+                        {% if stats and stats.performance %}{{ stats.performance.memory_usage }}{% else %}0{% endif %} MB<span class="stats-indicator"></span>
+                    </p>
+                </div>
+                <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" data-metric="cpu">
+                    <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">
+                        CPU Usage
+                    </p>
+                    <p class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-metric="cpu" data-cpu="{% if stats and stats.performance %}{{ stats.performance.cpu_usage }}{% else %}0{% endif %}">
+                        {% if stats and stats.performance %}{{ stats.performance.cpu_usage }}{% else %}0{% endif %}%<span class="stats-indicator"></span>
                     </p>
                 </div>
             </div>
@@ -726,6 +778,70 @@
           
           // Update chart with new data
           updateChart(metrics.daily_data);
+          
+          // Load and update performance metrics
+          try {
+            const performanceResponse = await fetch('/api/metrics/performance');
+            const performanceData = await performanceResponse.json();
+            
+            // Update latency
+            const latencyElement = document.querySelector('[data-metric="latency"]');
+            if (latencyElement && performanceData.latency !== undefined) {
+              const newLatency = parseFloat(performanceData.latency);
+              const currentLatency = parseFloat(latencyElement.dataset.latency || '0');
+              
+              if (Math.abs(newLatency - currentLatency) > 0.1) {
+                latencyElement.textContent = `${newLatency.toFixed(1)}ms`;
+                latencyElement.dataset.latency = newLatency;
+                
+                // Add flash effect
+                latencyElement.classList.add('flash-update');
+                setTimeout(() => {
+                  latencyElement.classList.remove('flash-update');
+                }, 500);
+              }
+            }
+            
+            // Update memory usage
+            const memoryElement = document.querySelector('[data-metric="memory"]');
+            if (memoryElement && performanceData.memory_usage !== undefined) {
+              const newMemory = parseFloat(performanceData.memory_usage);
+              const currentMemory = parseFloat(memoryElement.dataset.memory || '0');
+              
+              if (Math.abs(newMemory - currentMemory) > 0.1) {
+                memoryElement.textContent = `${newMemory.toFixed(1)} MB`;
+                memoryElement.dataset.memory = newMemory;
+                
+                // Add flash effect
+                memoryElement.classList.add('flash-update');
+                setTimeout(() => {
+                  memoryElement.classList.remove('flash-update');
+                }, 600);
+              }
+            }
+            
+            // Update CPU usage
+            const cpuElement = document.querySelector('[data-metric="cpu"]');
+            if (cpuElement && performanceData.cpu_usage !== undefined) {
+              const newCpu = parseFloat(performanceData.cpu_usage);
+              const currentCpu = parseFloat(cpuElement.dataset.cpu || '0');
+              
+              if (Math.abs(newCpu - currentCpu) > 0.1) {
+                cpuElement.textContent = `${newCpu.toFixed(1)}%`;
+                cpuElement.dataset.cpu = newCpu;
+                
+                // Add flash effect
+                cpuElement.classList.add('flash-update');
+                setTimeout(() => {
+                  cpuElement.classList.remove('flash-update');
+                }, 700);
+              }
+            }
+            
+            console.log('Performance metrics updated:', performanceData);
+          } catch (performanceError) {
+            console.warn('Failed to update performance metrics:', performanceError);
+          }
           
           console.log('Metrics updated:', metrics);
           
