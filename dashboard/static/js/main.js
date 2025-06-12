@@ -1,26 +1,66 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Update uptime counter
-    const initialServerTime = Math.floor(Date.now() / 1000);
-    let uptimeOffset = 0;
+// Global functions for use across different templates
+// Number counting animation function
+function animateNumber(element, startValue, endValue, duration = 1000, useCommas = false) {
+    const startTime = performance.now();
+    const difference = endValue - startValue;
     
+    function updateNumber(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Use easing function for smooth animation
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        const currentValue = Math.round(startValue + (difference * easeProgress));
+        
+        // Format number based on useCommas parameter
+        if (useCommas) {
+            element.textContent = currentValue.toLocaleString();
+        } else {
+            element.textContent = formatNumber(currentValue);
+        }
+        
+        if (progress < 1) {
+            requestAnimationFrame(updateNumber);
+        }
+    }
+    
+    requestAnimationFrame(updateNumber);
+}
+
+// Format number function
+function formatNumber(num) {
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1) + 'M';
+    } else if (num >= 1000) {
+        return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Real-time uptime tracking
+    let uptimeStartTime = null;
+    let uptimeInterval = null;
+    let lastCommandUpdate = 0;
+    
+    // Enhanced uptime update function with real-time calculation
     function updateUptime() {
         const uptimeElement = document.getElementById('uptime');
-        if (!uptimeElement) return;
+        if (!uptimeElement || !uptimeStartTime) return;
 
-        const baseUptime = parseInt(uptimeElement.dataset.uptime);
-        // Add the time elapsed since page load
-        const currentUptime = baseUptime + uptimeOffset;
+        // Calculate current uptime from start time
+        const currentTime = Date.now() / 1000;
+        const totalSeconds = Math.floor(currentTime - uptimeStartTime);
         
-        const days = Math.floor(currentUptime / 86400);
-        const hours = Math.floor((currentUptime % 86400) / 3600);
-        const minutes = Math.floor((currentUptime % 3600) / 60);
-        const seconds = currentUptime % 60;
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
         
         uptimeElement.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-        uptimeOffset++;
     }
 
-    // Auto-refresh stats functionality
+    // Auto-refresh stats functionality with enhanced animations
     let lastStatsUpdate = Date.now();
     
     function formatNumber(num) {
@@ -36,52 +76,83 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch('/api/stats')
             .then(response => response.json())
             .then(data => {
-                // Update command count
+                // Update uptime start time if available
+                if (data.uptime && data.uptime.start_time) {
+                    if (!uptimeStartTime) {
+                        uptimeStartTime = data.uptime.start_time;
+                        // Start real-time uptime updates every second
+                        if (!uptimeInterval) {
+                            uptimeInterval = setInterval(updateUptime, 1000);
+                            updateUptime(); // Initial update
+                        }
+                    }
+                }
+                
+                // Update command count with animation
                 const totalCommandsElement = document.getElementById('total-commands');
                 if (totalCommandsElement && data.commands) {
                     const newCount = data.commands.total_executed || 0;
-                    totalCommandsElement.textContent = formatNumber(newCount);
-                    
-                    // Add flash effect if count increased
                     const currentCount = parseInt(totalCommandsElement.dataset.count || '0');
-                    if (newCount > currentCount) {
+                    
+                    if (newCount !== currentCount) {
+                        // Animate the number change
+                        animateNumber(totalCommandsElement, currentCount, newCount, 800);
+                        
+                        // Add flash effect
                         totalCommandsElement.classList.add('flash-update');
                         setTimeout(() => {
                             totalCommandsElement.classList.remove('flash-update');
-                        }, 500);
+                        }, 800);
                     }
                     totalCommandsElement.dataset.count = newCount;
                 }
                 
-                // Update server count
+                // Update server count with animation
                 const serverCountElement = document.getElementById('server-count');
                 if (serverCountElement && data.guilds) {
                     const newCount = data.guilds.count || 0;
-                    serverCountElement.textContent = formatNumber(newCount);
-                    
-                    // Add flash effect if count changed
                     const currentCount = parseInt(serverCountElement.dataset.count || '0');
+                    
                     if (newCount !== currentCount) {
+                        animateNumber(serverCountElement, currentCount, newCount, 600);
+                        
+                        // Add flash effect
                         serverCountElement.classList.add('flash-update');
                         setTimeout(() => {
                             serverCountElement.classList.remove('flash-update');
-                        }, 500);
+                        }, 600);
                     }
                     serverCountElement.dataset.count = newCount;
                 }
                 
-                // Update today's commands
+                // Update user count with animation
+                const userCountElement = document.getElementById('user-count');
+                if (userCountElement && data.performance) {
+                    const newCount = data.performance.user_count || 0;
+                    const currentCount = parseInt(userCountElement.dataset.count || '0');
+                    
+                    if (newCount !== currentCount) {
+                        animateNumber(userCountElement, currentCount, newCount, 700);
+                        userCountElement.classList.add('flash-update');
+                        setTimeout(() => {
+                            userCountElement.classList.remove('flash-update');
+                        }, 700);
+                    }
+                    userCountElement.dataset.count = newCount;
+                }
+                
+                // Update today's commands with animation
                 const todayCommandsElement = document.getElementById('today-commands');
                 if (todayCommandsElement && data.commands && data.commands.daily_metrics) {
                     const today = new Date().toISOString().split('T')[0];
                     const todayMetric = data.commands.daily_metrics.find(m => m.date === today);
                     const todayCount = todayMetric ? todayMetric.count : 0;
-                    
-                    todayCommandsElement.textContent = formatNumber(todayCount);
-                    
-                    // Add flash effect if count increased
                     const currentCount = parseInt(todayCommandsElement.dataset.count || '0');
-                    if (todayCount > currentCount) {
+                    
+                    if (todayCount !== currentCount) {
+                        animateNumber(todayCommandsElement, currentCount, todayCount, 500);
+                        
+                        // Add flash effect
                         todayCommandsElement.classList.add('flash-update');
                         setTimeout(() => {
                             todayCommandsElement.classList.remove('flash-update');
@@ -91,6 +162,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 lastStatsUpdate = Date.now();
+                
+                // Also update charts and metrics if we're on the dev dashboard
+                if (typeof updateMetricsAndChart === 'function') {
+                    updateMetricsAndChart();
+                }
             })
             .catch(error => {
                 console.warn('Failed to update stats:', error);
@@ -102,23 +178,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial stats update after 1 second
     setTimeout(updateStats, 1000);
-
-    // Link hover effect
-    document.querySelectorAll('.nav-link').forEach(link => {
-        link.addEventListener('mouseover', () => {
-            link.style.transform = 'translateY(-2px)';
-        });
-        
-        link.addEventListener('mouseout', () => {
-            link.style.transform = 'translateY(0)';
-        });
-    });
-
-    // Navigation and sidebar functionality is now handled by ui-components.js
-    
-    // Initialize uptime
-    setInterval(updateUptime, 1000);
-    updateUptime();
 
     // Prefix Management
     const prefixInput = document.getElementById('newPrefix');

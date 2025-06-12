@@ -48,6 +48,59 @@
             transform: rotate(360deg);
         }
         
+        /* Flash animation for stat updates */
+        @keyframes flash {
+            0% { background-color: rgba(8, 126, 164, 0.2); }
+            50% { background-color: rgba(8, 126, 164, 0.5); }
+            100% { background-color: transparent; }
+        }
+        
+        .flash-update {
+            animation: flash 0.8s ease-in-out;
+        }
+        
+        /* Chart styling for better proportions */
+        .chart-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        .chart-svg {
+            width: 100%;
+            height: 148px;
+            display: block;
+        }
+        
+        /* Ensure data points maintain circular shape */
+        .data-point {
+            vector-effect: non-scaling-stroke;
+        }
+        
+        /* Tooltip styling */
+        .flash-update {
+            animation: flash-effect 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes flash-effect {
+            0% { 
+                background-color: rgba(6, 182, 212, 0.2);
+                transform: scale(1);
+            }
+            50% { 
+                background-color: rgba(6, 182, 212, 0.4);
+                transform: scale(1.02);
+            }
+            100% { 
+                background-color: transparent;
+                transform: scale(1);
+            }
+        }
+        
+        /* Number counting animation */
+        .counting {
+            transition: all 0.3s ease;
+        }
+        
         /* Enhanced chart styling */
         .chart-container {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
@@ -167,15 +220,25 @@
             <div class="flex flex-wrap gap-4 p-4">
                 <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                     <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">Uptime</p>
-                    <p id="uptime-display" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight">{{ stats.uptime.days }}d {{ stats.uptime.hours }}h {{ stats.uptime.minutes }}m</p>
+                    <p id="uptime-display" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight">
+                        {% if stats and stats.uptime %}
+                            {{ stats.uptime.days }}d {{ stats.uptime.hours }}h {{ stats.uptime.minutes }}m
+                        {% else %}
+                            0d 0h 0m
+                        {% endif %}
+                    </p>
                 </div>
                 <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                     <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">Servers Connected</p>
-                    <p id="server-count" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-count="{{ stats.guilds.count }}">{{ stats.guilds.count }}<span class="stats-indicator"></span></p>
+                    <p id="server-count" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-count="{% if stats and stats.guilds %}{{ stats.guilds.count }}{% else %}0{% endif %}">
+                        {% if stats and stats.guilds %}{{ stats.guilds.count }}{% else %}0{% endif %}<span class="stats-indicator"></span>
+                    </p>
                 </div>
                 <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
                     <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">Total Commands Executed</p>
-                    <p id="total-commands" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-count="{{ stats.commands.total_executed }}">{{ stats.commands.total_executed | thousands }}<span class="stats-indicator"></span></p>
+                    <p id="total-commands" class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-count="{% if stats and stats.commands %}{{ stats.commands.total_executed }}{% else %}0{% endif %}">
+                        {% if stats and stats.commands %}{{ stats.commands.total_executed | thousands }}{% else %}0{% endif %}<span class="stats-indicator"></span>
+                    </p>
                 </div>
             </div>
 
@@ -199,10 +262,9 @@
                       <span id="y-50">150</span>
                       <span id="y-25">75</span>
                       <span id="y-min">0</span>
-                    </div>
-                    <!-- Chart area -->
-                    <div class="flex-1">
-                      <svg id="command-chart" width="100%" height="148" viewBox="0 0 400 148" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                    </div>                  <!-- Chart area -->
+                  <div class="flex-1 chart-container relative">
+                    <svg id="command-chart" class="chart-svg" width="100%" height="148" viewBox="0 0 400 148" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
                         <!-- Grid lines -->
                         <line x1="0" y1="0" x2="400" y2="0" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
                         <line x1="0" y1="37" x2="400" y2="37" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
@@ -370,10 +432,20 @@
         
         let pathData = '';
         let areaData = '';
+        const chartPoints = [];
         
         dailyData.forEach((day, index) => {
           const x = index * stepWidth;
           const y = chartHeight - (day.count / yAxisMax * chartHeight);
+          
+          // Store point data for hover functionality
+          chartPoints.push({
+            x: x,
+            y: y,
+            count: day.count || 0,
+            date: day.date || '',
+            index: index
+          });
           
           if (index === 0) {
             pathData += `M${x} ${y}`;
@@ -390,6 +462,67 @@
         // Update the chart elements
         document.getElementById('chart-line').setAttribute('d', pathData);
         document.getElementById('chart-area').setAttribute('d', areaData);
+        
+        // Add hover points to the chart
+        const chartSvg = document.querySelector('.chart-svg');
+        if (chartSvg) {
+          // Remove existing hover areas and points
+          chartSvg.querySelectorAll('.hover-area, .data-point').forEach(element => element.remove());
+          
+          // Add invisible hover areas with better positioning
+          chartPoints.forEach((point, index) => {
+            // Create visible data points with fixed proportional radius
+            const dataPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            dataPoint.setAttribute('cx', point.x);
+            dataPoint.setAttribute('cy', point.y);
+            // Use a fixed radius that maintains circular shape
+            dataPoint.setAttribute('r', '4');
+            dataPoint.setAttribute('fill', '#0c7ff2');
+            dataPoint.setAttribute('stroke', 'white');
+            dataPoint.setAttribute('stroke-width', '2');
+            dataPoint.setAttribute('class', 'data-point');
+            dataPoint.setAttribute('vector-effect', 'non-scaling-stroke');
+            dataPoint.style.opacity = '0';
+            dataPoint.style.transition = 'opacity 0.2s ease';
+            chartSvg.appendChild(dataPoint);
+            
+            // Create wider hover areas for better interaction
+            const hoverArea = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            const hoverWidth = chartWidth / dailyData.length; // Dynamic width based on data points
+            const hoverX = Math.max(0, point.x - hoverWidth / 2);
+            
+            hoverArea.setAttribute('x', hoverX);
+            hoverArea.setAttribute('y', 0);
+            hoverArea.setAttribute('width', hoverWidth);
+            hoverArea.setAttribute('height', chartHeight);
+            hoverArea.setAttribute('fill', 'transparent');
+            hoverArea.setAttribute('class', 'hover-area');
+            hoverArea.style.cursor = 'crosshair';
+            
+            // Store point data for event handlers
+            hoverArea.dataset.pointData = JSON.stringify(point);
+            hoverArea.dataset.pointIndex = index;
+            
+            // Add hover events with improved functionality
+            hoverArea.addEventListener('mouseenter', function(e) {
+              console.log('Chart hover enter:', point);
+              dataPoint.style.opacity = '1';
+              showTooltip(point, e);
+            });
+            
+            hoverArea.addEventListener('mouseleave', function(e) {
+              console.log('Chart hover leave');
+              dataPoint.style.opacity = '0';
+              hideTooltip();
+            });
+            
+            hoverArea.addEventListener('mousemove', function(e) {
+              updateTooltipPosition(point, e);
+            });
+            
+            chartSvg.appendChild(hoverArea);
+          });
+        }
         
         // Update day labels
         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -408,6 +541,91 @@
         updateChartColors();
       }
       
+      // Tooltip functionality
+      function showTooltip(point, event) {
+        let tooltip = document.getElementById('chart-tooltip');
+        if (!tooltip) {
+          tooltip = document.createElement('div');
+          tooltip.id = 'chart-tooltip';
+          tooltip.style.cssText = `
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+          `;
+          document.body.appendChild(tooltip);
+        }
+        
+        const formatDate = (dateStr) => {
+          if (!dateStr) return 'Today';
+          const date = new Date(dateStr);
+          return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            weekday: 'short'
+          });
+        };
+        
+        tooltip.innerHTML = `
+          <div style="font-weight: 600; margin-bottom: 6px; color: #60a5fa;">${formatDate(point.date)}</div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 8px; height: 8px; background: #0c7ff2; border-radius: 50%;"></div>
+            <span>Commands: <strong>${point.count.toLocaleString()}</strong></span>
+          </div>
+        `;
+        
+        tooltip.style.opacity = '1';
+        
+        // Position tooltip using mouse coordinates
+        updateTooltipPosition(point, event);
+      }
+      
+      function updateTooltipPosition(point, event) {
+        const tooltip = document.getElementById('chart-tooltip');
+        if (!tooltip || !event) return;
+        
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        let left = event.clientX + 15;
+        let top = event.clientY - 15;
+        
+        // Adjust position to keep tooltip in viewport
+        if (left + tooltipRect.width > viewportWidth) {
+          left = event.clientX - tooltipRect.width - 15;
+        }
+        
+        if (top - tooltipRect.height < 0) {
+          top = event.clientY + 15;
+        }
+        
+        tooltip.style.left = left + 'px';
+        tooltip.style.top = top + 'px';
+      }
+      
+      function hideTooltip() {
+        const tooltip = document.getElementById('chart-tooltip');
+        if (tooltip) {
+          tooltip.style.opacity = '0';
+          // Remove tooltip after animation to prevent flickering
+          setTimeout(() => {
+            if (tooltip.style.opacity === '0') {
+              tooltip.style.left = '-9999px';
+            }
+          }, 300);
+        }
+      }
+      
       // Function to update chart colors based on current theme
       function updateChartColors() {
         const isDark = document.documentElement.classList.contains('dark');
@@ -424,6 +642,63 @@
           chartLine.setAttribute('stroke', '#0c7ff2');
           gradientStops[0].setAttribute('stop-color', '#0c7ff2');
           gradientStops[1].setAttribute('stop-color', '#0c7ff2');
+        }
+      }
+      
+      // Function to update metrics and chart - called by main.js for real-time updates
+      async function updateMetricsAndChart() {
+        try {
+          console.log('Updating metrics and chart...');
+          
+          // Load command metrics for chart
+          const metricsResponse = await fetch('/api/metrics/commands');
+          const metrics = await metricsResponse.json();
+          
+          // Update weekly total with animation
+          const weeklyTotalElement = document.getElementById('weekly-total');
+          if (weeklyTotalElement) {
+            const currentTotal = parseInt(weeklyTotalElement.textContent.replace(/,/g, '')) || 0;
+            const newTotal = metrics.total_last_7_days;
+            
+            if (newTotal !== currentTotal) {
+              // Animate the number change
+              if (typeof animateNumber === 'function') {
+                animateNumber(weeklyTotalElement, currentTotal, newTotal, 1000, true); // true for comma formatting
+              } else {
+                weeklyTotalElement.textContent = newTotal.toLocaleString();
+              }
+              
+              // Add flash effect
+              weeklyTotalElement.classList.add('flash-update');
+              setTimeout(() => {
+                weeklyTotalElement.classList.remove('flash-update');
+              }, 1000);
+            }
+          }
+          
+          // Update percentage with animation
+          const percentageElement = document.getElementById('percentage-change');
+          if (percentageElement && metrics.percentage_change !== undefined) {
+            const changeColor = metrics.percentage_change >= 0 ? '#078838' : '#dc2626';
+            const changePrefix = metrics.percentage_change >= 0 ? '+' : '';
+            
+            // Add flash effect for percentage change
+            percentageElement.classList.add('flash-update');
+            setTimeout(() => {
+              percentageElement.classList.remove('flash-update');
+            }, 800);
+            
+            percentageElement.innerHTML = 
+              `<span style="color: ${changeColor}">${changePrefix}${metrics.percentage_change}%</span>`;
+          }
+          
+          // Update chart with new data
+          updateChart(metrics.daily_data);
+          
+          console.log('Metrics updated:', metrics);
+          
+        } catch (error) {
+          console.warn('Failed to update metrics:', error);
         }
       }
       

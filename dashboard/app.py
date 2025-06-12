@@ -11,6 +11,8 @@ from pymongo import MongoClient
 import pymongo.errors
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import threading
+import fcntl  # For file locking
 
 
 # Load environment variables from .env file
@@ -55,37 +57,75 @@ IS_RENDER_DEPLOYMENT = os.environ.get('RENDER') or os.environ.get('RAILWAY') or 
 
 # Global stats dictionary for ephemeral deployments
 GLOBAL_STATS = {
-    "uptime": {"days": 0, "hours": 0, "minutes": 0},
-    "guilds": {"count": 0, "history": []},
-    "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}},
+    "uptime": {"days": 0, "hours": 0, "minutes": 0, "total_seconds": 0, "start_time": time.time()},
+    "guilds": {"count": 0, "history": [], "list": [], "detailed": []},
+    "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}, "daily_count": 0},
+    "performance": {"user_count": 0, "latency": 0, "shard_count": 1},
     "last_updated": datetime.now().isoformat()
 }
+
+# File locking mechanism
+file_lock = threading.Lock()
 
 def load_stats():
     """Load stats from global variable or JSON file"""
     global GLOBAL_STATS
     
+    # Default stats structure
+    default_stats = {
+        "uptime": {"days": 0, "hours": 0, "minutes": 0, "total_seconds": 0, "start_time": time.time()},
+        "guilds": {"count": 0, "history": [], "list": [], "detailed": []},
+        "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}, "daily_count": 0},
+        "performance": {"user_count": 0, "latency": 0, "shard_count": 1},
+        "last_updated": datetime.now().isoformat()
+    }
+    
     if IS_RENDER_DEPLOYMENT:
         # Use global stats for ephemeral deployments
+        # Ensure GLOBAL_STATS has all required keys
+        for key, value in default_stats.items():
+            if key not in GLOBAL_STATS:
+                GLOBAL_STATS[key] = value
         return GLOBAL_STATS
     
-    try:
-        with open(stats_file, 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        # Return default stats if file doesn't exist
-        return {
-            "uptime": {"days": 0, "hours": 0, "minutes": 0},
-            "guilds": {"count": 0, "history": []},
-            "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}},
-            "last_updated": datetime.now().isoformat()
-        }
-    except Exception as e:
-        print(f"Error loading stats: {e}")
-        return {}
+    with file_lock:
+        try:
+            with open(stats_file, 'r') as f:
+                content = f.read().strip()
+                if not content or content == '{}':
+                    # File is empty or contains only empty object
+                    return default_stats
+                stats = json.loads(content)
+            # Ensure all required keys exist
+            for key, value in default_stats.items():
+                if key not in stats:
+                    stats[key] = value
+                elif isinstance(value, dict):
+                    # Ensure nested keys exist
+                    for nested_key, nested_value in value.items():
+                        if nested_key not in stats[key]:
+                            stats[key][nested_key] = nested_value
+            
+            # Calculate total_seconds if missing
+            if 'uptime' in stats and 'total_seconds' not in stats['uptime']:
+                days = stats['uptime'].get('days', 0)
+                hours = stats['uptime'].get('hours', 0)
+                minutes = stats['uptime'].get('minutes', 0)
+                stats['uptime']['total_seconds'] = (days * 86400) + (hours * 3600) + (minutes * 60)
+            
+            return stats
+        except FileNotFoundError:
+            # Return default stats if file doesn't exist
+            return default_stats
+        except json.JSONDecodeError as e:
+            print(f"JSON decode error loading stats: {e}")
+            return default_stats
+        except Exception as e:
+            print(f"Error loading stats: {e}")
+            return default_stats
 
 def save_stats(stats):
-    """Save stats to global variable or JSON file"""
+    """Save stats to global variable or JSON file with file locking"""
     global GLOBAL_STATS
     
     stats['last_updated'] = datetime.now().isoformat()
@@ -95,13 +135,25 @@ def save_stats(stats):
         GLOBAL_STATS.update(stats)
         return True
     
-    try:
-        with open(stats_file, 'w') as f:
-            json.dump(stats, f, indent=2)
-        return True
-    except Exception as e:
-        print(f"Error saving stats: {e}")
-        return False
+    with file_lock:
+        try:
+            # Write to a temporary file first, then rename (atomic operation)
+            temp_file = stats_file + '.tmp'
+            with open(temp_file, 'w') as f:
+                json.dump(stats, f, indent=2)
+            
+            # Atomic rename
+            os.rename(temp_file, stats_file)
+            return True
+        except Exception as e:
+            print(f"Error saving stats: {e}")
+            # Clean up temp file if it exists
+            if os.path.exists(temp_file):
+                try:
+                    os.remove(temp_file)
+                except:
+                    pass
+            return False
 
 def get_guild_settings(guild_id: str):
     """Get guild settings synchronously with error handling"""
@@ -361,8 +413,27 @@ def api_stats():
 @app.route('/')
 def home():
     user_id = request.cookies.get('user_id')
-    # Load real stats from file
-    stats = load_stats()
+    
+    # Load real stats from file with error handling
+    try:
+        stats = load_stats()
+        # Ensure stats is a dictionary
+        if not isinstance(stats, dict):
+            stats = {
+                "uptime": {"days": 0, "hours": 0, "minutes": 0},
+                "guilds": {"count": 0, "history": []},
+                "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}},
+                "last_updated": datetime.now().isoformat()
+            }
+    except Exception as e:
+        print(f"Error loading stats in home route: {e}")
+        # Provide fallback stats
+        stats = {
+            "uptime": {"days": 0, "hours": 0, "minutes": 0},
+            "guilds": {"count": 0, "history": []},
+            "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}},
+            "last_updated": datetime.now().isoformat()
+        }
     
     # Only check bot owner ID if Discord config is loaded
     if DISCORD_BOT_OWNER_ID and user_id and user_id == DISCORD_BOT_OWNER_ID and request.host == 'localhost:5000':
@@ -612,6 +683,20 @@ def api_test():
         'mongodb_available': MONGODB_AVAILABLE,
         'discord_configured': bool(DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET)
     })
+
+@app.route('/privacy')
+@app.route('/PRIVACY')
+def privacy():
+    """Privacy policy page"""
+    try:
+        return render_template('privacy.html')
+    except TemplateNotFound as e:
+        print(f"Template not found: {e}")
+        return f"Template not found: {e}", 404
+    except Exception as e:
+        print(f"Error rendering privacy template: {e}")
+        return f"Error rendering privacy template: {e}", 500
+
 
 @app.route('/faq')
 @app.route('/FAQ')
@@ -890,6 +975,52 @@ def get_user_balance_api(user_id):
     balance = get_user_balance(user_id)
     return jsonify(balance)
 
+def is_owner(user_id):
+    """Check if user is the bot owner"""
+    return str(user_id) == str(DISCORD_BOT_OWNER_ID)
+
+@app.route('/admin')
+def admin_dashboard():
+    """Admin dashboard - only accessible to bot owner"""
+    load_config()  # Ensure config is loaded
+    
+    # Check if user is logged in
+    user_id = request.cookies.get('user_id')
+    if not user_id:
+        return redirect(url_for('login'))
+    
+    # Check if user is the bot owner
+    if not is_owner(user_id):
+        return render_template('error.html',
+                             error_code=403,
+                             error_message="Access forbidden - Admin only",
+                             username=request.cookies.get('username')), 403
+    
+    try:
+        # Get comprehensive stats for admin view
+        stats = load_stats()
+        
+        # Get additional admin-specific data
+        admin_data = {
+            'total_guilds': stats.get('guilds', {}).get('count', 0),
+            'total_commands': stats.get('commands', {}).get('total_executed', 0),
+            'uptime': stats.get('uptime', {}),
+            'performance': stats.get('performance', {}),
+            'last_updated': stats.get('last_updated', 'Never')
+        }
+        
+        return render_template('DEVindex.html', 
+                             stats=stats,
+                             admin_data=admin_data,
+                             is_admin=True,
+                             username=request.cookies.get('username'))
+    except Exception as e:
+        print(f"Error loading admin dashboard: {e}")
+        return render_template('error.html',
+                             error_code=500,
+                             error_message="Failed to load admin dashboard",
+                             username=request.cookies.get('username')), 500
+
 @app.route('/api/guild/<guild_id>/stats')
 @login_required
 def get_guild_stats_api(guild_id):
@@ -935,21 +1066,57 @@ def update_stats_endpoint():
     """Dedicated endpoint for bot to update stats"""
     return api_stats()  # Reuse the existing logic
 
+@app.route('/invite')
+async def invite():
+    """Redirect to bot invite page"""
+    if not DISCORD_CLIENT_ID:
+        return "Discord configuration not set up", 503
+    return redirect(f'https://discord.com/oauth2/authorize?client_id={DISCORD_CLIENT_ID}&permissions=10140354735863&response_type=code&redirect_uri={DISCORD_REDIRECT_URI}&integration_type=0&scope=identify+guilds+bot+applications.commands.permissions.update+applications.commands')
+
 @app.route('/api/stats/realtime', methods=['POST'])
 def realtime_stats_update():
     """Handle real-time command execution updates from bot"""
     try:
         data = request.get_json()
-        if not data or data.get('type') != 'command_executed':
+        print(f"Realtime stats received: {data}")  # Debug logging
+        
+        if not data or data.get('type') != 'command_update':
+            print(f"Invalid data type: {data.get('type') if data else 'No data'}")  # Debug logging
             return jsonify({"error": "Invalid real-time update data"}), 400
         
-        # Store the real-time update (you could use a cache like Redis in production)
-        # For now, we'll just update the stats file immediately for development
-        stats = load_stats()
+        # Load stats with error handling
+        try:
+            stats = load_stats()
+        except Exception as e:
+            print(f"Error loading stats for real-time update: {e}")
+            # Return a basic response but don't fail
+            return jsonify({"error": "Could not load stats", "details": str(e)}), 500
+        
+        # Initialize commands structure if it doesn't exist or is corrupted
+        if not isinstance(stats, dict):
+            print("Stats is not a dictionary, using default")
+            stats = {
+                "uptime": {"days": 0, "hours": 0, "minutes": 0, "total_seconds": 0, "start_time": time.time()},
+                "guilds": {"count": 0, "history": [], "list": [], "detailed": []},
+                "commands": {"total_executed": 0, "daily_metrics": [], "command_types": {}, "daily_count": 0},
+                "performance": {"user_count": 0, "latency": 0, "shard_count": 1},
+                "last_updated": datetime.now().isoformat()
+            }
+        
+        if 'commands' not in stats or not isinstance(stats['commands'], dict):
+            stats['commands'] = {
+                'total_executed': 0,
+                'daily_metrics': [],
+                'command_types': {},
+                'daily_count': 0
+            }
         
         # Update total commands
         if 'total_commands' in data:
             stats['commands']['total_executed'] = data['total_commands']
+        else:
+            # Increment total commands if not provided
+            stats['commands']['total_executed'] = stats['commands'].get('total_executed', 0) + 1
         
         # Update today's count
         today = datetime.now().strftime('%Y-%m-%d')
@@ -958,7 +1125,7 @@ def realtime_stats_update():
         # Find today's entry or create it
         updated = False
         for metric in daily_metrics:
-            if metric['date'] == today:
+            if metric.get('date') == today:
                 metric['count'] = metric.get('count', 0) + 1
                 metric['timestamp'] = datetime.now().isoformat()
                 updated = True
@@ -979,19 +1146,30 @@ def realtime_stats_update():
             command_types[command_name] = command_types.get(command_name, 0) + 1
             stats['commands']['command_types'] = command_types
         
-        save_stats(stats)
+        # Save stats with error handling
+        try:
+            save_success = save_stats(stats)
+            if not save_success:
+                print("Failed to save stats but continuing")
+        except Exception as e:
+            print(f"Error saving stats: {e}")
+            # Don't fail the request, just log the error
         
         return jsonify({
             "status": "success", 
             "message": "Real-time stats updated",
             "updated_stats": {
                 "total_commands": stats['commands']['total_executed'],
-                "today_commands": next((m['count'] for m in daily_metrics if m['date'] == today), 0)
+                "today_commands": next((m['count'] for m in daily_metrics if m.get('date') == today), 0),
+                "command": data.get('command'),
+                "error": data.get('error', False)
             }
         })
         
     except Exception as e:
         print(f"Error in real-time stats update: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/metrics/commands')

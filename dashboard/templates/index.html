@@ -185,7 +185,13 @@
                                 </svg>
                             </div>
                             <div class="flex flex-col gap-1">
-                                <h2 class="text-[#0d141c] dark:text-white text-xl font-bold leading-tight" id="uptime" data-uptime="{{ stats.uptime }}">{{ stats.uptime }}s</h2>
+                                <h2 class="text-[#0d141c] dark:text-white text-xl font-bold leading-tight" id="uptime" data-uptime="{{ (stats.uptime.total_seconds if stats.uptime else 0) }}">
+                                    {% if stats.uptime %}
+                                        {{ (stats.uptime.days if stats.uptime.days else 0) }}d {{ (stats.uptime.hours if stats.uptime.hours else 0) }}h {{ (stats.uptime.minutes if stats.uptime.minutes else 0) }}m
+                                    {% else %}
+                                        0d 0h 0m
+                                    {% endif %}
+                                </h2>
                                 <p class="text-[#49739c] dark:text-gray-300 text-sm font-normal leading-normal">Uptime</p>
                             </div>
                         </div>
@@ -196,7 +202,7 @@
                                 </svg>
                             </div>
                             <div class="flex flex-col gap-1">
-                                <h2 class="text-[#0d141c] dark:text-white text-xl font-bold leading-tight">{{ stats.latency if stats.latency else 'N/A' }}ms</h2>
+                                <h2 class="text-[#0d141c] dark:text-white text-xl font-bold leading-tight">{{ (stats.performance.latency if stats.performance else 'N/A') }}ms</h2>
                                 <p class="text-[#49739c] dark:text-gray-300 text-sm font-normal leading-normal">Latency</p>
                             </div>
                         </div>
