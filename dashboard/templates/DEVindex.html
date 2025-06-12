@@ -1,159 +1,159 @@
 <!DOCTYPE html>
 <html class="transition-colors duration-300">
-<head>
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
-    <link
-      rel="stylesheet"
-      as="style"
-      onload="this.rel='stylesheet'"
-      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
-    />
+  <head>
+      <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+      <link
+        rel="stylesheet"
+        as="style"
+        onload="this.rel='stylesheet'"
+        href="https://fonts.googleapis.com/css2?display=swap&amp;family=Inter%3Awght%40400%3B500%3B700%3B900&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900"
+      />
 
-    <title>BronxBot Admin Panel</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/southbronx.png') }}">
-    
-    <!-- Meta tags -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="BronxBot Admin Panel - Monitor your Discord bot's performance, command usage, and server statistics in real-time.">
+      <title>BronxBot Admin Panel</title>
+      <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/southbronx.png') }}">
+      
+      <!-- Meta tags -->
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="description" content="BronxBot Admin Panel - Monitor your Discord bot's performance, command usage, and server statistics in real-time.">
 
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
-    
-    <style>
-        /* Avatar dropdown styles */
-        .dropdown-menu {
-            display: none;
-            opacity: 0;
-            transform: translateY(-10px);
-            transition: all 0.3s ease;
-        }
-        
-        .dropdown-menu.show {
-            display: block;
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        /* Spinning avatar animation */
-        .spin-360 {
-            transition: transform 0.6s ease-in-out;
-        }
-        
-        .spin-360:hover {
-            transform: rotate(360deg);
-        }
-        
-        /* Flash animation for stat updates */
-        @keyframes flash {
-            0% { background-color: rgba(8, 126, 164, 0.2); }
-            50% { background-color: rgba(8, 126, 164, 0.5); }
-            100% { background-color: transparent; }
-        }
-        
-        .flash-update {
-            animation: flash 0.8s ease-in-out;
-        }
-        
-        /* Performance metric styling */
-        .stat-card[data-metric="latency"] {
-            border-left: 4px solid #10b981; /* Green for latency */
-        }
-        
-        .stat-card[data-metric="memory"] {
-            border-left: 4px solid #f59e0b; /* Orange for memory */
-        }
-        
-        .stat-card[data-metric="cpu"] {
-            border-left: 4px solid #ef4444; /* Red for CPU */
-        }
-        
-        /* Performance metric icons */
-        .performance-icon {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-right: 8px;
-            opacity: 0.7;
-        }
-        
-        /* Chart styling for better proportions */
-        .chart-container {
-            position: relative;
-            width: 100%;
-        }
-        
-        .chart-svg {
-            width: 100%;
-            height: 148px;
-            display: block;
-        }
-        
-        /* Ensure data points maintain circular shape */
-        .data-point {
-            vector-effect: non-scaling-stroke;
-            transform-origin: center;
-        }
-        
-        /* Fix for circle scaling */
-        .chart-svg .data-point {
-            transform: scale(1, 1);
-        }
-        
-        /* Tooltip styling */
-        
-        @keyframes flash-effect {
-            0% { 
-                background-color: rgba(6, 182, 212, 0.2);
-                transform: scale(1);
-            }
-            50% { 
-                background-color: rgba(6, 182, 212, 0.4);
-                transform: scale(1.02);
-            }
-            100% { 
-                background-color: transparent;
-                transform: scale(1);
-            }
-        }
-        
-        /* Number counting animation */
-        .counting {
-            transition: all 0.3s ease;
-        }
-        
-        /* Enhanced chart styling */
-        .chart-container {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .dark .chart-container {
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.1) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        /* Stat card animations */
-        .stat-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
-        }
-        
-        .dark .stat-card:hover {
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
-        }
-    </style>
-</head>
-<body>
+      <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+      <script>
+          tailwind.config = {
+              darkMode: 'class',
+          }
+      </script>
+      
+      <style>
+          /* Avatar dropdown styles */
+          .dropdown-menu {
+              display: none;
+              opacity: 0;
+              transform: translateY(-10px);
+              transition: all 0.3s ease;
+          }
+          
+          .dropdown-menu.show {
+              display: block;
+              opacity: 1;
+              transform: translateY(0);
+          }
+          
+          /* Spinning avatar animation */
+          .spin-360 {
+              transition: transform 0.6s ease-in-out;
+          }
+          
+          .spin-360:hover {
+              transform: rotate(360deg);
+          }
+          
+          /* Flash animation for stat updates */
+          @keyframes flash {
+              0% { background-color: rgba(8, 126, 164, 0.2); }
+              50% { background-color: rgba(8, 126, 164, 0.5); }
+              100% { background-color: transparent; }
+          }
+          
+          .flash-update {
+              animation: flash 0.8s ease-in-out;
+          }
+          
+          /* Performance metric styling */
+          .stat-card[data-metric="latency"] {
+              border-left: 4px solid #10b981; /* Green for latency */
+          }
+          
+          .stat-card[data-metric="memory"] {
+              border-left: 4px solid #f59e0b; /* Orange for memory */
+          }
+          
+          .stat-card[data-metric="cpu"] {
+              border-left: 4px solid #ef4444; /* Red for CPU */
+          }
+          
+          /* Performance metric icons */
+          .performance-icon {
+              display: inline-block;
+              width: 20px;
+              height: 20px;
+              margin-right: 8px;
+              opacity: 0.7;
+          }
+          
+          /* Chart styling for better proportions */
+          .chart-container {
+              position: relative;
+              width: 100%;
+          }
+          
+          .chart-svg {
+              width: 100%;
+              height: 148px;
+              display: block;
+          }
+          
+          /* Ensure data points maintain circular shape */
+          .data-point {
+              vector-effect: non-scaling-stroke;
+              transform-origin: center;
+          }
+          
+          /* Fix for circle scaling */
+          .chart-svg .data-point {
+              transform: scale(1, 1);
+          }
+          
+          /* Tooltip styling */
+          
+          @keyframes flash-effect {
+              0% { 
+                  background-color: rgba(6, 182, 212, 0.2);
+                  transform: scale(1);
+              }
+              50% { 
+                  background-color: rgba(6, 182, 212, 0.4);
+                  transform: scale(1.02);
+              }
+              100% { 
+                  background-color: transparent;
+                  transform: scale(1);
+              }
+          }
+          
+          /* Number counting animation */
+          .counting {
+              transition: all 0.3s ease;
+          }
+          
+          /* Enhanced chart styling */
+          .chart-container {
+              background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+          }
+          
+          .dark .chart-container {
+              background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.1) 100%);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+          }
+          
+          /* Stat card animations */
+          .stat-card {
+              transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          }
+          
+          .stat-card:hover {
+              transform: translateY(-4px);
+              box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+          }
+          
+          .dark .stat-card:hover {
+              box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+          }
+      </style>
+  </head>
+  <body>
     <div class="relative flex size-full min-h-screen flex-col bg-slate-50 dark:bg-gray-900 group/design-root overflow-x-hidden transition-colors duration-300" style='font-family: Inter, "Noto Sans", sans-serif;'>
         <div class="layout-container flex h-full grow flex-col">
             <header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7edf4] dark:border-b-gray-700 px-4 md:px-10 py-3 bg-white dark:bg-gray-800 transition-colors duration-300">
@@ -203,23 +203,32 @@
                         
                         <!-- Dropdown Menu -->
                         <div id="user-dropdown-menu" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
-                            <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">Admin Panel</p>
+                            <div class="py-2">
+                                <div class="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ request.cookies.get('username', 'User') }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">Admin Panel</p>
+                                </div>
+                                {% if request.cookies.get('user_id') %}
+                                <a href="/" class="flex items-center gap-2 px-4 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M104,40H152a8,8,0,0,1,0,16H104a8,8,0,0,1,0-16ZM224,48V64a8,8,0,0,1-16,0V56H48v8a8,8,0,0,1-16,0V48A16,16,0,0,1,48,32H208A16,16,0,0,1,224,48ZM216,88v88a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V88A8,8,0,0,1,48,80H208A8,8,0,0,1,216,88Z"></path>
+                                    </svg>
+                                    Admin Dashboard
+                                </a>
+                                {% endif %}
+                                <a href="/settings" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3.12-3.12L186-119.55a8,8,0,0,0-3.93-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40q-2.16-.06-4.32,0L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3.12,3.12L40.45,70.05a8,8,0,0,0-6,3.93,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84q-.06,2.16,0,4.32L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.48,1.56,3.12,3.12L70,215.55a8,8,0,0,0,3.93,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3.12-3.12L215.55,186a8,8,0,0,0,6-3.93,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06ZM128,208A80,80,0,1,1,208,128,80.09,80.09,0,0,1,128,208Z"></path>
+                                    </svg>
+                                    Settings
+                                </a>
+                                <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+                                        <path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H48V208h56A8,8,0,0,1,112,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L188.69,112H112a8,8,0,0,0,0,16h76.69l-18.35,18.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,221.66,122.34Z"></path>
+                                    </svg>
+                                    Log Out
+                                </a>
                             </div>
-                            <!-- This is the Admin Dashboard, so no need to show it again -->
-                            <a href="/servers" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-                                    <path d="M90.83,120l-3.33-2.5a24,24,0,1,0-29,38L88,176h24V152a8,8,0,0,1,16,0v24h24l29.5-20.5a24,24,0,1,0-29-38L149.17,120H152a8,8,0,0,0,8-8V88h16a8,8,0,0,0,0-16H160V56a8,8,0,0,0-16,0V72H128V56a8,8,0,0,0-16,0V72H96V56a8,8,0,0,0-16,0V72H64a8,8,0,0,0,0,16H80v24a8,8,0,0,0,8,8Z"></path>
-                                </svg>
-                                Manage Servers
-                            </a>
-                            <a href="/logout" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
-                                    <path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H48V208h56A8,8,0,0,1,112,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L188.69,112H112a8,8,0,0,0,0,16h76.69l-18.35,18.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,221.66,122.34Z"></path>
-                                </svg>
-                                Log Out
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -844,7 +853,7 @@
       // Initialize everything when page loads
       document.addEventListener('DOMContentLoaded', function() {
         initTheme();
-        initDropdown();
+        initDropdown(); // Initialize dropdown functionality
         loadMetrics();
         updateChartColors(); // Initialize chart colors based on current theme
         
@@ -858,4 +867,12 @@
       // Refresh metrics every 30 seconds
       setInterval(loadMetrics, 30000);
     </script>
+    
+    <!-- Load navbar.js first to ensure dropdown functionality is available -->
     <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme-handler.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-components.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  
+  </body>
+</html>
