@@ -108,7 +108,7 @@ def get_guild_settings(guild_id: str):
     if not MONGODB_AVAILABLE or db is None:
         print("MongoDB not available, returning default settings")
         return {
-            'prefixes': ['!'],
+            'prefixes': ['.'],
             'welcome': {
                 'enabled': False,
                 'channel_id': None,
