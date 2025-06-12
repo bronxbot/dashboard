@@ -82,7 +82,7 @@ GLOBAL_STATS = {
 }
 
 # Log the storage mode being used
-print(f"Dashboard storage mode: {'PRODUCTION (in-memory)' if IS_PRODUCTION else 'DEVELOPMENT (file-based)'}")
+print(f"Dashboard storage mode: {'PRODUCTION (MongoDB)' if IS_PRODUCTION else 'DEVELOPMENT (file-based)'}")
 print(f"FLASK_ENV: {os.environ.get('FLASK_ENV', 'not set')}")
 
 # File locking mechanism
@@ -313,6 +313,49 @@ def update_production_stats():
     
     # Update last_updated timestamp
     GLOBAL_STATS['last_updated'] = datetime.now().isoformat()
+    
+    # If MongoDB is available, update it as well in production mode
+    if MONGODB_AVAILABLE and db is not None:
+        try:
+            # Update command count and daily metrics
+            update_data = {
+                "$inc": {
+                    "command_count": 1,
+                    "daily_commands": 1
+                },
+                "$set": {
+                    "last_update": datetime.now().timestamp()
+                }
+            }
+            
+            # If today's entry was newly created, add it to MongoDB
+            if not today_entry:
+                update_data["$push"] = {
+                    "daily_metrics": {
+                        "date": today,
+                        "count": 1,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                }
+            else:
+                # Update existing today's entry
+                db.bot_stats.update_one(
+                    {
+                        "_id": "global_stats", 
+                        "daily_metrics.date": today
+                    },
+                    {"$inc": {"daily_metrics.$.count": 1}}
+                )
+            
+            # Update MongoDB
+            db.bot_stats.update_one(
+                {"_id": "global_stats"},
+                update_data,
+                upsert=True
+            )
+            
+        except Exception as e:
+            print(f"Error updating MongoDB in production stats: {e}")
 
 def get_guild_settings(guild_id: str):
     """Get guild settings synchronously with error handling"""
