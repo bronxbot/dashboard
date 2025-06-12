@@ -118,13 +118,19 @@ def load_stats():
                 mongo_stats = default_stats.copy()
                 
                 # Update command stats
-                mongo_stats["commands"]["total_executed"] = stats_doc.get("command_count", 0)
+                # Use daily_metrics sum as the primary source of truth for total_executed
+                daily_metrics = stats_doc.get("daily_metrics", [])
+                if daily_metrics:
+                    # Calculate total from daily metrics
+                    total_from_daily = sum(day.get('count', 0) for day in daily_metrics)
+                    mongo_stats["commands"]["total_executed"] = total_from_daily
+                else:
+                    # Fallback to command_count if no daily metrics
+                    mongo_stats["commands"]["total_executed"] = stats_doc.get("command_count", 0)
+                
                 mongo_stats["commands"]["daily_count"] = stats_doc.get("daily_commands", 0)
                 mongo_stats["commands"]["command_types"] = stats_doc.get("command_types", {})
-                
-                # Load daily metrics from MongoDB if available
-                if "daily_metrics" in stats_doc:
-                    mongo_stats["commands"]["daily_metrics"] = stats_doc["daily_metrics"]
+                mongo_stats["commands"]["daily_metrics"] = daily_metrics
                 
                 # Update last_updated timestamp
                 if "last_update" in stats_doc:
@@ -723,7 +729,8 @@ def home():
         return render_template('DEVindex.html', username=username, stats=stats) 
     elif user_id:
         username = request.cookies.get('username', 'User')
-        return render_template('index.html', username=username, stats=stats)
+        is_bot_owner = (user_id == DISCORD_BOT_OWNER_ID if DISCORD_BOT_OWNER_ID else False)
+        return render_template('index.html', username=username, stats=stats, is_bot_owner=is_bot_owner)
     return render_template('home.html', stats=stats)
 
 @app.route('/login')
@@ -1116,7 +1123,8 @@ def servers():
     return render_template('servers.html', 
         guilds=manage_guilds,
         username=request.cookies.get('username', 'User'),
-        config={'CLIENT_ID': DISCORD_CLIENT_ID}
+        config={'CLIENT_ID': DISCORD_CLIENT_ID},
+        is_bot_owner=(request.cookies.get('user_id') == DISCORD_BOT_OWNER_ID if DISCORD_BOT_OWNER_ID else False)
     )
 
 @app.route('/webhooks/topgg', methods=['POST'])
