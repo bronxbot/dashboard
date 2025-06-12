@@ -604,41 +604,6 @@
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-        // Dark/Light mode toggle functionality
-        const themeToggle = document.getElementById('theme-toggle');
-        const sunIcon = document.getElementById('sun-icon');
-        const moonIcon = document.getElementById('moon-icon');
-        const html = document.documentElement;
-        const heroBackground = document.getElementById('hero-background');
-
-        // Load saved theme or default to light
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') {
-            html.classList.add('dark');
-            heroBackground.classList.remove('light-theme');
-            heroBackground.classList.add('dark-theme');
-            sunIcon.classList.add('hidden');
-            moonIcon.classList.remove('hidden');
-        }
-
-        themeToggle.addEventListener('click', () => {
-            html.classList.toggle('dark');
-            
-            if (html.classList.contains('dark')) {
-                localStorage.setItem('theme', 'dark');
-                heroBackground.classList.remove('light-theme');
-                heroBackground.classList.add('dark-theme');
-                sunIcon.classList.add('hidden');
-                moonIcon.classList.remove('hidden');
-            } else {
-                localStorage.setItem('theme', 'light');
-                heroBackground.classList.remove('dark-theme');
-                heroBackground.classList.add('light-theme');
-                sunIcon.classList.remove('hidden');
-                moonIcon.classList.add('hidden');
-            }
-        });
-
         // Mobile menu toggle
         const mobileMenuButton = document.getElementById('mobile-menu-button');
         const mobileMenu = document.getElementById('mobile-menu');
