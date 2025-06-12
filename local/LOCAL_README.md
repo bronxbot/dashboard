@@ -169,7 +169,3 @@ If you prefer manual setup:
 2. **Daily development:** Run `./local/run.sh`
 3. **Before deploying:** Run `./local/test.sh`
 4. **Troubleshooting:** Check the documentation in `local/`
-
----
-
-**Made setup too easy? You're welcome! 😉**
