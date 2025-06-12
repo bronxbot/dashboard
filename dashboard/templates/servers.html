@@ -174,28 +174,6 @@
                                             </div>
                                         </div>
                                         
-                                        <!-- Bot Configuration Panel -->
-                                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-                                            <h4 class="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">Bot Configuration</h4>
-                                            <div class="space-y-2">
-                                                <!-- Quick Settings Toggle -->
-                                                <div class="flex items-center justify-between">
-                                                    <span class="text-sm text-blue-800 dark:text-blue-300">Welcome Messages</span>
-                                                    <label class="relative inline-flex items-center cursor-pointer">
-                                                        <input type="checkbox" value="" class="sr-only peer" {% if guild.settings and guild.settings.welcome_enabled %}checked{% endif %}>
-                                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                                    </label>
-                                                </div>
-                                                <div class="flex items-center justify-between">
-                                                    <span class="text-sm text-blue-800 dark:text-blue-300">Auto Moderation</span>
-                                                    <label class="relative inline-flex items-center cursor-pointer">
-                                                        <input type="checkbox" value="" class="sr-only peer" {% if guild.settings and guild.settings.automod_enabled %}checked{% endif %}>
-                                                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
                                         <!-- Action Buttons -->
                                         <div class="flex gap-2">
                                             <a href="/servers/{{ guild.id }}/settings" 
@@ -268,11 +246,15 @@
 
         // Check for saved theme preference or default to light mode
         const currentTheme = localStorage.getItem('theme') || 'light';
-        html.classList.add(currentTheme);
         
         if (currentTheme === 'dark') {
+            html.classList.add('dark');
             sunIcon.classList.add('hidden');
             moonIcon.classList.remove('hidden');
+        } else {
+            html.classList.remove('dark');
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
         }
 
         themeToggle.addEventListener('click', () => {
@@ -388,40 +370,6 @@
                 modal.remove();
             }
         }
-
-        // Settings toggle functionality
-        document.addEventListener('change', function(e) {
-            if (e.target.type === 'checkbox' && e.target.closest('.bg-blue-50')) {
-                const guildCard = e.target.closest('.bg-white');
-                const guildId = guildCard.querySelector('a[href*="/servers/"]').href.split('/')[4];
-                const settingType = e.target.closest('.flex').querySelector('span').textContent.toLowerCase().replace(' ', '_');
-                
-                // Update setting via API
-                fetch(\`/api/guild/\${guildId}/quick-setting\`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        setting: settingType,
-                        enabled: e.target.checked
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.success) {
-                        // Revert toggle if update failed
-                        e.target.checked = !e.target.checked;
-                        alert('Failed to update setting');
-                    }
-                })
-                .catch(error => {
-                    // Revert toggle if request failed
-                    e.target.checked = !e.target.checked;
-                    alert('Failed to update setting');
-                });
-            }
-        });
     </script>
 </body>
 </html>

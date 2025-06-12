@@ -111,10 +111,6 @@
                     <!-- User Avatar Dropdown (if logged in) -->
                     {% if request.cookies.get('user_id') %}
                     <div class="flex gap-2">
-                        <a href="/logout" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#dc2626] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#b91c1c] transition-colors">
-                            <span class="truncate">Logout</span>
-                        </a>
-                        
                         <div class="relative">
                             <button id="user-dropdown-toggle" class="flex items-center gap-2 hover:opacity-80 transition-opacity spin-360">
                                 <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-[#0c7ff2]" 
