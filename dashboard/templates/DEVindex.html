@@ -74,12 +74,15 @@
         /* Ensure data points maintain circular shape */
         .data-point {
             vector-effect: non-scaling-stroke;
+            transform-origin: center;
+        }
+        
+        /* Fix for circle scaling */
+        .chart-svg .data-point {
+            transform: scale(1, 1);
         }
         
         /* Tooltip styling */
-        .flash-update {
-            animation: flash-effect 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        }
         
         @keyframes flash-effect {
             0% { 
@@ -264,7 +267,7 @@
                       <span id="y-min">0</span>
                     </div>                  <!-- Chart area -->
                   <div class="flex-1 chart-container relative">
-                    <svg id="command-chart" class="chart-svg" width="100%" height="148" viewBox="0 0 400 148" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+                    <svg id="command-chart" class="chart-svg" width="100%" height="148" viewBox="0 0 400 148" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
                         <!-- Grid lines -->
                         <line x1="0" y1="0" x2="400" y2="0" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
                         <line x1="0" y1="37" x2="400" y2="37" stroke="currentColor" stroke-width="1" class="text-gray-300 dark:text-gray-600"/>
@@ -471,17 +474,22 @@
           
           // Add invisible hover areas with better positioning
           chartPoints.forEach((point, index) => {
-            // Create visible data points with fixed proportional radius
+            // Create visible data points with proportional radius
             const dataPoint = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             dataPoint.setAttribute('cx', point.x);
             dataPoint.setAttribute('cy', point.y);
-            // Use a fixed radius that maintains circular shape
-            dataPoint.setAttribute('r', '4');
+            // Calculate radius based on the actual chart dimensions to maintain proportional circles
+            const svgElement = chartSvg;
+            const rect = svgElement.getBoundingClientRect();
+            const scaleX = rect.width / 400; // viewBox width
+            const scaleY = rect.height / 148; // viewBox height
+            const avgScale = (scaleX + scaleY) / 2;
+            const radius = 3 / avgScale; // Adjust radius based on average scale
+            dataPoint.setAttribute('r', radius);
             dataPoint.setAttribute('fill', '#0c7ff2');
             dataPoint.setAttribute('stroke', 'white');
-            dataPoint.setAttribute('stroke-width', '2');
+            dataPoint.setAttribute('stroke-width', 1.5 / avgScale);
             dataPoint.setAttribute('class', 'data-point');
-            dataPoint.setAttribute('vector-effect', 'non-scaling-stroke');
             dataPoint.style.opacity = '0';
             dataPoint.style.transition = 'opacity 0.2s ease';
             chartSvg.appendChild(dataPoint);
@@ -623,6 +631,30 @@
               tooltip.style.left = '-9999px';
             }
           }, 300);
+        }
+      }
+      
+      // Function to update metrics and chart (called by real-time updates)
+      async function updateMetricsAndChart() {
+        try {
+          // Load command metrics for chart
+          const metricsResponse = await fetch('/api/metrics/commands');
+          const metrics = await metricsResponse.json();
+          
+          // Update weekly total and percentage
+          document.getElementById('weekly-total').textContent = metrics.total_last_7_days.toLocaleString();
+          const changeColor = metrics.percentage_change >= 0 ? '#078838' : '#dc2626';
+          const changePrefix = metrics.percentage_change >= 0 ? '+' : '';
+          document.getElementById('percentage-change').innerHTML = 
+            `<span style="color: ${changeColor}">${changePrefix}${metrics.percentage_change}%</span>`;
+          
+          // Update chart with real data
+          updateChart(metrics.daily_data);
+          
+          console.log('Chart metrics updated:', metrics);
+          
+        } catch (error) {
+          console.error('Error updating chart metrics:', error);
         }
       }
       
