@@ -1408,26 +1408,41 @@ def realtime_stats_update():
 def get_command_metrics():
     """Get command metrics for charts"""
     try:
+        # Initialize variables
+        daily_metrics = []
+        command_types = {}
+        
         # Try to get metrics from MongoDB first
         if MONGODB_AVAILABLE and db is not None:
             try:
                 stats_doc = db.bot_stats.find_one({"_id": "global_stats"})
-                if stats_doc and 'daily_metrics' in stats_doc:
-                    daily_metrics = stats_doc['daily_metrics']
-                    # Continue with processing
+                if stats_doc:
+                    # Get daily metrics if available in MongoDB
+                    if 'daily_metrics' in stats_doc:
+                        daily_metrics = stats_doc['daily_metrics']
+                    # Get command types from MongoDB
+                    if 'command_types' in stats_doc:
+                        command_types = stats_doc['command_types']
+                    else:
+                        # Fall back to getting command types from regular stats
+                        stats = load_stats()
+                        command_types = stats.get('commands', {}).get('command_types', {})
                 else:
-                    # Fall back to file if MongoDB doesn't have metrics yet
+                    # MongoDB document doesn't exist, fall back to file
                     stats = load_stats()
                     daily_metrics = stats.get('commands', {}).get('daily_metrics', [])
+                    command_types = stats.get('commands', {}).get('command_types', {})
             except Exception as e:
                 print(f"Error loading command metrics from MongoDB: {e}")
                 # Fall back to file-based storage
                 stats = load_stats()
                 daily_metrics = stats.get('commands', {}).get('daily_metrics', [])
+                command_types = stats.get('commands', {}).get('command_types', {})
         else:
             # No MongoDB, use file-based storage
             stats = load_stats()
             daily_metrics = stats.get('commands', {}).get('daily_metrics', [])
+            command_types = stats.get('commands', {}).get('command_types', {})
         
         # Get last 7 days of data
         last_7_days = daily_metrics[-7:] if len(daily_metrics) >= 7 else daily_metrics
@@ -1451,11 +1466,13 @@ def get_command_metrics():
             'daily_data': last_7_days,
             'total_last_7_days': total_last_7_days,
             'percentage_change': percentage_change,
-            'command_types': stats.get('commands', {}).get('command_types', {})
+            'command_types': command_types
         })
         
     except Exception as e:
         print(f"Error getting command metrics: {e}")
+        import traceback
+        traceback.print_exc()  # Print full traceback for better debugging
         # Return default data
         return jsonify({
             'daily_data': [{'date': '', 'count': 0} for _ in range(7)],
