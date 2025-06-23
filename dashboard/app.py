@@ -1484,7 +1484,7 @@ def update_stats_endpoint():
     return api_stats()  # Reuse the existing logic
 
 @app.route('/invite')
-async def invite():
+def invite():
     """Redirect to bot invite page"""
     if not DISCORD_CLIENT_ID:
         return "Discord configuration not set up", 503
