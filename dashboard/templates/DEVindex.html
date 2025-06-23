@@ -279,14 +279,6 @@
                         {% if stats and stats.performance %}{{ "%.1f"|format(stats.performance.latency) }}{% else %}0.0{% endif %}ms<span class="stats-indicator"></span>
                     </p>
                 </div>
-                <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" data-metric="memory">
-                    <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">
-                        Memory Usage
-                    </p>
-                    <p class="text-[#0d141c] dark:text-white tracking-light text-2xl font-bold leading-tight" data-metric="memory" data-memory="{% if stats and stats.performance %}{{ stats.performance.memory_usage }}{% else %}0{% endif %}">
-                        {% if stats and stats.performance %}{{ "%.1f"|format(stats.performance.memory_usage) }}{% else %}0.0{% endif %} MB<span class="stats-indicator"></span>
-                    </p>
-                </div>
                 <div class="stat-card flex min-w-[158px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700" data-metric="cpu">
                     <p class="text-[#0d141c] dark:text-white text-base font-medium leading-normal">
                         CPU Usage
@@ -799,24 +791,6 @@
                 setTimeout(() => {
                   latencyElement.classList.remove('flash-update');
                 }, 500);
-              }
-            }
-            
-            // Update memory usage
-            const memoryElement = document.querySelector('[data-metric="memory"]');
-            if (memoryElement && performanceData.memory_usage !== undefined) {
-              const newMemory = parseFloat(performanceData.memory_usage);
-              const currentMemory = parseFloat(memoryElement.dataset.memory || '0');
-              
-              if (Math.abs(newMemory - currentMemory) > 0.1) {
-                memoryElement.textContent = `${newMemory.toFixed(1)} MB`;
-                memoryElement.dataset.memory = newMemory;
-                
-                // Add flash effect
-                memoryElement.classList.add('flash-update');
-                setTimeout(() => {
-                  memoryElement.classList.remove('flash-update');
-                }, 600);
               }
             }
             
