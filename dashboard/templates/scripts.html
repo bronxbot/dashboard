@@ -1,0 +1,17 @@
+<!-- Common JavaScript includes for all templates -->
+<!-- Load scripts in correct order to prevent conflicts -->
+
+<!-- 1. FOUC Prevention (must be first) -->
+<script src="{{ url_for('static', filename='js/fouc-prevention.js') }}"></script>
+
+<!-- 2. Theme Management -->
+<script src="{{ url_for('static', filename='js/theme-handler.js') }}"></script>
+
+<!-- 3. Navigation and UI Components -->
+<script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ui-components.js') }}"></script>
+
+<!-- 4. Common utilities -->
+<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+
+<!-- 5. Page-specific scripts (to be included after this template if needed) -->
